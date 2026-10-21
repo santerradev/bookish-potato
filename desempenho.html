@@ -1,0 +1,164 @@
+<!doctype html>
+<html lang="pt-BR" data-pagina="desempenho" data-papel="instrutor">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Desempenho | Sala PS</title>
+<link rel="icon" type="image/png" href="img/logo-ps.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<script src="https://cdn.tailwindcss.com"></script>
+<script src="js/tw.js"></script>
+<link rel="stylesheet" href="css/sala.css">
+<script defer src="https://cdn.jsdelivr.net/npm/@alpinejs/collapse@3.14.1/dist/cdn.min.js"></script>
+<script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.14.1/dist/cdn.min.js"></script>
+</head>
+
+<body x-data="pagina()" :class="$store.ps.menu && 'overflow-hidden lg:overflow-auto'" class="font-sans bg-ps-fundo text-ps-escuro dark:bg-ps-noite dark:text-slate-100 min-h-screen">
+
+<main id="conteudo" class="pt-16 lg:pl-72 min-h-screen">
+  <div class="px-4 sm:px-6 py-6 sm:py-8 max-w-6xl mx-auto">
+    <div class="flex flex-wrap items-end gap-3">
+      <div class="mr-auto">
+        <h1 class="text-2xl sm:text-3xl font-extrabold">Desempenho</h1>
+        <p class="mt-1 text-[15px] text-ps-cinza dark:text-slate-400">Como a turma está indo nas tarefas.</p>
+      </div>
+      <label class="flex items-center gap-2 text-sm"><span class="text-ps-cinza dark:text-slate-400">Turma</span>
+        <select x-model="tid" @change="history.replaceState(null, '', 'desempenho.html' + (tid ? '?t=' + tid : ''))" class="h-11 rounded-lg border border-ps-linha dark:border-ps-noite3 bg-white dark:bg-ps-noite2 px-3 text-sm">
+          <option value="">Todas as turmas</option>
+          <template x-for="t in $store.ps.turmas()" :key="t.id"><option :value="t.id" x-text="t.nome" :selected="t.id === tid"></option></template>
+        </select>
+      </label>
+    </div>
+
+    <!-- Indicadores -->
+    <dl class="mt-6 grid grid-cols-2 lg:grid-cols-4 gap-3">
+      <template x-for="k in indicadores()" :key="k.n">
+        <div class="rounded-2xl bg-white dark:bg-ps-noite2 border border-ps-linha dark:border-ps-noite3 p-5">
+          <dt class="text-xs font-semibold text-ps-cinza dark:text-slate-400" x-text="k.n"></dt>
+          <dd class="mt-1 text-3xl sm:text-4xl font-extrabold tabular-nums" x-text="k.v"></dd>
+          <p class="mt-1 text-xs text-ps-cinza dark:text-slate-400" x-text="k.d"></p>
+        </div>
+      </template>
+    </dl>
+
+    <div class="mt-6 flex justify-end">
+      <button type="button" @click="tabela = !tabela" :aria-pressed="tabela.toString()" class="h-10 px-4 rounded-full text-sm font-semibold border border-ps-linha dark:border-ps-noite3 bg-white dark:bg-ps-noite2 inline-flex items-center gap-2 hover:border-ps-azul">
+        <span x-html="ic(tabela ? 'grafico' : 'tabela', '!w-4 !h-4')"></span><span x-text="tabela ? 'Ver como gráfico' : 'Ver como tabela'"></span>
+      </button>
+    </div>
+
+    <div class="mt-3 grid gap-6 lg:grid-cols-2">
+      <!-- Entregas por tarefa -->
+      <section class="rounded-2xl bg-white dark:bg-ps-noite2 border border-ps-linha dark:border-ps-noite3 p-5 sm:p-6" aria-labelledby="g1">
+        <h2 id="g1" class="font-bold">Entregas por tarefa</h2>
+        <p class="text-sm text-ps-cinza dark:text-slate-400">% de trainees que entregaram</p>
+        <template x-if="porTarefa().length === 0"><p class="mt-6 text-sm text-ps-cinza dark:text-slate-400">Nenhuma tarefa nesta seleção.</p></template>
+
+        <ul x-show="!tabela" class="mt-5 flex flex-col gap-4">
+          <template x-for="b in porTarefa()" :key="b.id">
+            <li class="group" :title="b.titulo + ': ' + b.entregues + ' de ' + b.total + ' entregaram (' + b.pct + '%)'">
+              <div class="flex items-baseline gap-3 text-sm">
+                <a :href="'entregas.html?t=' + b.tid + '&id=' + b.id" class="flex-1 min-w-0 truncate hover:underline" x-text="b.titulo"></a>
+                <span class="font-bold tabular-nums" x-text="b.pct + '%'"></span>
+              </div>
+              <div class="mt-1.5 h-3 rounded bg-ps-fundo dark:bg-ps-noite3" aria-hidden="true">
+                <div class="h-full rounded bg-ps-texto dark:bg-ps-claro group-hover:brightness-110 transition-[width]" :style="'width:' + b.pct + '%'"></div>
+              </div>
+            </li>
+          </template>
+        </ul>
+        <table x-show="tabela" x-cloak class="mt-5 w-full text-sm">
+          <thead class="text-left text-xs text-ps-cinza dark:text-slate-400"><tr><th class="py-2 font-semibold">Tarefa</th><th class="py-2 font-semibold text-right">Entregaram</th><th class="py-2 font-semibold text-right">%</th></tr></thead>
+          <tbody class="divide-y divide-ps-linha dark:divide-ps-noite3">
+            <template x-for="b in porTarefa()" :key="b.id"><tr><td class="py-2 pr-3" x-text="b.titulo"></td><td class="py-2 text-right tabular-nums" x-text="b.entregues + '/' + b.total"></td><td class="py-2 text-right font-bold tabular-nums" x-text="b.pct + '%'"></td></tr></template>
+          </tbody>
+        </table>
+      </section>
+
+      <!-- Aproveitamento por trainee -->
+      <section class="rounded-2xl bg-white dark:bg-ps-noite2 border border-ps-linha dark:border-ps-noite3 p-5 sm:p-6" aria-labelledby="g2">
+        <h2 id="g2" class="font-bold">Tarefas entregues por trainee</h2>
+        <p class="text-sm text-ps-cinza dark:text-slate-400">% das tarefas da seleção</p>
+        <ul x-show="!tabela" class="mt-5 flex flex-col gap-4">
+          <template x-for="b in porTrainee()" :key="b.id">
+            <li class="group" :title="b.nome + ': ' + b.entregues + ' de ' + b.total + ' tarefas (' + b.pct + '%)'">
+              <div class="flex items-baseline gap-3 text-sm">
+                <span class="flex-1 min-w-0 truncate" x-text="b.nome"></span>
+                <span class="text-xs text-ps-cinza dark:text-slate-400 tabular-nums" x-text="b.entregues + '/' + b.total"></span>
+                <span class="font-bold tabular-nums w-11 text-right" x-text="b.pct + '%'"></span>
+              </div>
+              <div class="mt-1.5 h-3 rounded bg-ps-fundo dark:bg-ps-noite3" aria-hidden="true">
+                <div class="h-full rounded bg-ps-texto dark:bg-ps-claro group-hover:brightness-110 transition-[width]" :style="'width:' + b.pct + '%'"></div>
+              </div>
+            </li>
+          </template>
+        </ul>
+        <table x-show="tabela" x-cloak class="mt-5 w-full text-sm">
+          <thead class="text-left text-xs text-ps-cinza dark:text-slate-400"><tr><th class="py-2 font-semibold">Trainee</th><th class="py-2 font-semibold text-right">Entregues</th><th class="py-2 font-semibold text-right">Aproveitamento</th></tr></thead>
+          <tbody class="divide-y divide-ps-linha dark:divide-ps-noite3">
+            <template x-for="b in porTrainee()" :key="b.id"><tr><td class="py-2 pr-3" x-text="b.nome"></td><td class="py-2 text-right tabular-nums" x-text="b.entregues + '/' + b.total"></td><td class="py-2 text-right font-bold tabular-nums" x-text="b.aprov"></td></tr></template>
+          </tbody>
+        </table>
+      </section>
+    </div>
+
+    <p class="mt-4 text-xs text-ps-cinza dark:text-slate-400">Dados da demo: incluem "Sua entrega" (visão do trainee) e três trainees de exemplo. Notas só contam depois de devolvidas.</p>
+  </div>
+</main>
+
+<script src="js/dados.js"></script>
+<script src="js/app.js"></script>
+<script src="js/layout.js"></script>
+<script>
+  function pagina() {
+    return {
+      tid: param('t') || '', tabela: false,
+      init() { this.$store.ps.titulo = 'Desempenho'; if (this.tid) this.$store.ps.turmaAtiva = this.tid; },
+      tarefas() {
+        var s = this.$store.ps, out = [];
+        (this.tid ? [s.turma(this.tid)] : s.turmas()).forEach(function (t) {
+          if (!t) return;
+          s.itens(t).forEach(function (i) { if (i.tipo === 'tarefa') out.push(Object.assign({ tid: t.id }, i)); });
+        });
+        return out;
+      },
+      porTarefa() {
+        var s = this.$store.ps, al = s.alunosDe();
+        return this.tarefas().map(function (t) {
+          var e = al.filter(function (a) { return s.entregaDe(t.id, a.id); }).length;
+          return { id: t.id, tid: t.tid, titulo: t.titulo, entregues: e, total: al.length, pct: Math.round(e * 100 / al.length) };
+        });
+      },
+      porTrainee() {
+        var s = this.$store.ps, ts = this.tarefas();
+        return s.alunosDe().map(function (a) {
+          var e = ts.filter(function (t) { return s.entregaDe(t.id, a.id); }).length, pts = 0, max = 0;
+          ts.forEach(function (t) { var c = s.correcao(t.id, a.id); if (c) { pts += c.nota; max += t.pontos; } });
+          return { id: a.id, nome: a.id === 'voce' ? a.nome + ' (demo)' : a.nome, entregues: e, total: ts.length, pct: ts.length ? Math.round(e * 100 / ts.length) : 0, aprov: max ? Math.round(pts * 100 / max) + '%' : '-' };
+        });
+      },
+      indicadores() {
+        var s = this.$store.ps, ts = this.tarefas(), al = s.alunosDe(), esperadas = ts.length * al.length, ent = 0, pts = 0, max = 0, pend = 0;
+        ts.forEach(function (t) {
+          al.forEach(function (a) {
+            var e = s.entregaDe(t.id, a.id), c = s.correcao(t.id, a.id);
+            if (e) ent++;
+            if (c) { pts += c.nota; max += t.pontos; } else if (e) pend++;
+          });
+        });
+        var turmas = this.tid ? [s.turma(this.tid)] : s.turmas();
+        var publicadas = turmas.reduce(function (n, t) { return n + (t ? s.itens(t).length : 0); }, 0);
+        return [
+          { n: 'Taxa de entrega', v: esperadas ? Math.round(ent * 100 / esperadas) + '%' : '-', d: ent + ' de ' + esperadas + ' entregas esperadas' },
+          { n: 'Aproveitamento médio', v: max ? Math.round(pts * 100 / max) + '%' : '-', d: max ? 'nas entregas já avaliadas' : 'nenhuma nota devolvida ainda' },
+          { n: 'Para corrigir', v: pend, d: 'entregas sem nota' },
+          { n: 'Atividades publicadas', v: publicadas, d: 'materiais, tarefas e quizzes' }
+        ];
+      }
+    };
+  }
+</script>
+</body>
+</html>

@@ -1,0 +1,147 @@
+<!doctype html>
+<html lang="pt-BR" data-pagina="entregas" data-papel="instrutor">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Entregas | Sala PS</title>
+<link rel="icon" type="image/png" href="img/logo-ps.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<script src="https://cdn.tailwindcss.com"></script>
+<script src="js/tw.js"></script>
+<link rel="stylesheet" href="css/sala.css">
+<script defer src="https://cdn.jsdelivr.net/npm/@alpinejs/collapse@3.14.1/dist/cdn.min.js"></script>
+<script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.14.1/dist/cdn.min.js"></script>
+</head>
+
+<body x-data="pagina()" :class="$store.ps.menu && 'overflow-hidden lg:overflow-auto'" class="font-sans bg-ps-fundo text-ps-escuro dark:bg-ps-noite dark:text-slate-100 min-h-screen">
+
+<main id="conteudo" class="pt-16 lg:pl-72 min-h-screen">
+  <div class="px-4 sm:px-6 py-6 sm:py-8 max-w-5xl mx-auto">
+    <h1 class="text-2xl sm:text-3xl font-extrabold">Entregas da tarefa</h1>
+
+    <div class="mt-5 grid gap-3 sm:grid-cols-2">
+      <label class="flex flex-col gap-1.5 text-sm"><span class="font-semibold">Turma</span>
+        <select x-model="tid" @change="aid = (tarefas()[0] || {}).id || ''; url()" class="h-12 rounded-xl border border-ps-linha dark:border-ps-noite3 bg-white dark:bg-ps-noite2 px-3">
+          <template x-for="t in turmasComTarefa()" :key="t.id"><option :value="t.id" x-text="t.nome" :selected="t.id === tid"></option></template>
+        </select>
+      </label>
+      <label class="flex flex-col gap-1.5 text-sm"><span class="font-semibold">Tarefa</span>
+        <select x-model="aid" @change="url()" class="h-12 rounded-xl border border-ps-linha dark:border-ps-noite3 bg-white dark:bg-ps-noite2 px-3">
+          <template x-for="it in tarefas()" :key="it.id"><option :value="it.id" x-text="it.titulo" :selected="it.id === aid"></option></template>
+        </select>
+      </label>
+    </div>
+
+    <template x-if="tarefa()">
+      <div>
+        <div class="mt-6 rounded-2xl bg-white dark:bg-ps-noite2 border border-ps-linha dark:border-ps-noite3 p-5 flex flex-wrap items-center gap-4">
+          <span class="h-12 w-12 rounded-full inline-flex items-center justify-center shrink-0" :class="$store.ps.corTipo('tarefa')" x-html="ic('tarefa')"></span>
+          <div class="flex-1 min-w-[200px]">
+            <p class="text-lg font-bold" x-text="tarefa().titulo"></p>
+            <p class="text-sm text-ps-cinza dark:text-slate-400" x-text="tarefa().pontos + ' pontos · Prazo: ' + $store.ps.textoPrazo(tarefa())"></p>
+          </div>
+          <a :href="$store.ps.urlItem(tid, tarefa())" class="h-10 px-4 rounded-full text-sm font-semibold border border-ps-linha dark:border-ps-noite3 inline-flex items-center hover:bg-ps-fundo dark:hover:bg-ps-noite3">Ver enunciado</a>
+        </div>
+
+        <dl class="mt-4 grid grid-cols-2 sm:grid-cols-4 gap-3">
+          <template x-for="k in resumo()" :key="k.n">
+            <div class="rounded-2xl bg-white dark:bg-ps-noite2 border border-ps-linha dark:border-ps-noite3 p-4">
+              <dt class="text-xs font-semibold text-ps-cinza dark:text-slate-400" x-text="k.n"></dt>
+              <dd class="mt-1 text-3xl font-extrabold tabular-nums" x-text="k.v"></dd>
+            </div>
+          </template>
+        </dl>
+
+        <div class="mt-6 flex flex-wrap items-center gap-2">
+          <template x-for="fl in ['Todos', 'Entregues', 'Avaliadas', 'Não entregues']" :key="fl">
+            <button type="button" @click="filtro = fl" :aria-pressed="(filtro === fl).toString()" class="h-10 px-4 rounded-full text-sm font-semibold border"
+                    :class="filtro === fl ? 'bg-ps-escuro text-white border-ps-escuro dark:bg-ps-claro dark:text-ps-escuro dark:border-ps-claro' : 'border-ps-linha dark:border-ps-noite3 hover:bg-white dark:hover:bg-ps-noite2'" x-text="fl"></button>
+          </template>
+          <button type="button" @click="lembrar()" class="sm:ml-auto h-10 px-4 rounded-full text-sm font-semibold text-ps-texto dark:text-ps-claro inline-flex items-center gap-2 hover:bg-white dark:hover:bg-ps-noite2"><span x-html="ic('email', '!w-4 !h-4')"></span>Lembrar quem não entregou</button>
+        </div>
+
+        <div class="mt-4 rounded-2xl bg-white dark:bg-ps-noite2 border border-ps-linha dark:border-ps-noite3 overflow-hidden">
+          <table class="w-full text-sm">
+            <thead class="text-left text-xs text-ps-cinza dark:text-slate-400 border-b border-ps-linha dark:border-ps-noite3">
+              <tr>
+                <th scope="col" class="px-5 py-3 font-semibold">Trainee</th>
+                <th scope="col" class="px-3 py-3 font-semibold hidden sm:table-cell">Situação</th>
+                <th scope="col" class="px-3 py-3 font-semibold hidden md:table-cell">Entregue em</th>
+                <th scope="col" class="px-3 py-3 font-semibold text-right">Nota</th>
+                <th scope="col" class="px-5 py-3"><span class="sr-only">Ação</span></th>
+              </tr>
+            </thead>
+            <tbody class="divide-y divide-ps-linha dark:divide-ps-noite3">
+              <template x-for="a in lista()" :key="a.id">
+                <tr>
+                  <td class="px-5 py-3">
+                    <div class="flex items-center gap-3">
+                      <span class="h-9 w-9 rounded-full text-xs font-bold inline-flex items-center justify-center shrink-0" :class="a.id === 'voce' ? 'bg-ps-azul text-ps-escuro' : 'border-2 border-dashed border-ps-linha dark:border-ps-noite3 text-ps-cinza'" x-text="$store.ps.iniciais(a.nome)"></span>
+                      <div class="min-w-0">
+                        <p class="font-semibold truncate" x-text="a.id === 'voce' ? 'Sua entrega (demo)' : a.nome"></p>
+                        <p class="sm:hidden text-xs" :class="cor(a.id)" x-text="sit(a.id)"></p>
+                      </div>
+                    </div>
+                  </td>
+                  <td class="px-3 py-3 hidden sm:table-cell"><span class="inline-flex px-2.5 py-1 rounded-full text-xs font-semibold" :class="chip(a.id)" x-text="sit(a.id)"></span></td>
+                  <td class="px-3 py-3 hidden md:table-cell text-ps-cinza dark:text-slate-400" x-text="($store.ps.entregaDe(aid, a.id) || {}).data || '-'"></td>
+                  <td class="px-3 py-3 text-right font-bold tabular-nums" x-text="$store.ps.correcao(aid, a.id) ? $store.ps.fmt($store.ps.correcao(aid, a.id).nota) + '/' + tarefa().pontos : '-'"></td>
+                  <td class="px-5 py-3 text-right">
+                    <a x-show="$store.ps.entregaDe(aid, a.id)" :href="'corrigir.html?t=' + tid + '&id=' + aid + '&a=' + a.id" class="inline-flex items-center h-9 px-4 rounded-full text-xs font-bold" :class="$store.ps.correcao(aid, a.id) ? 'border border-ps-linha dark:border-ps-noite3 hover:bg-ps-fundo dark:hover:bg-ps-noite3' : 'bg-ps-azul text-ps-escuro'" x-text="$store.ps.correcao(aid, a.id) ? 'Revisar' : 'Corrigir'"></a>
+                  </td>
+                </tr>
+              </template>
+            </tbody>
+          </table>
+          <p x-show="lista().length === 0" class="px-5 py-8 text-center text-sm text-ps-cinza dark:text-slate-400">Ninguém nesta situação.</p>
+        </div>
+        <p class="mt-3 text-xs text-ps-cinza dark:text-slate-400">"Sua entrega" vem da visão do trainee. Os demais são exemplos.</p>
+      </div>
+    </template>
+  </div>
+</main>
+
+<script src="js/dados.js"></script>
+<script src="js/app.js"></script>
+<script src="js/layout.js"></script>
+<script>
+  function pagina() {
+    return {
+      tid: param('t') || '', aid: param('id') || '', filtro: 'Todos',
+      init() {
+        this.$store.ps.titulo = 'Entregas';
+        var self = this, ts = this.turmasComTarefa();
+        if (!ts.some(function (t) { return t.id === self.tid; })) this.tid = ts.length ? ts[0].id : '';
+        if (!this.tarefas().some(function (i) { return i.id === self.aid; })) this.aid = (this.tarefas()[0] || {}).id || '';
+        this.$store.ps.turmaAtiva = this.tid;
+      },
+      turmasComTarefa() { var s = this.$store.ps; return s.turmas().filter(function (t) { return s.itens(t).some(function (i) { return i.tipo === 'tarefa'; }); }); },
+      tarefas() { return this.$store.ps.itens(this.$store.ps.turma(this.tid)).filter(function (i) { return i.tipo === 'tarefa'; }); },
+      tarefa() { var id = this.aid; return this.tarefas().find(function (i) { return i.id === id; }) || null; },
+      url() { this.$store.ps.turmaAtiva = this.tid; history.replaceState(null, '', 'entregas.html?t=' + this.tid + '&id=' + this.aid); },
+      sit(al) { var s = this.$store.ps; return s.correcao(this.aid, al) ? 'Avaliada' : (s.entregaDe(this.aid, al) ? 'Entregue' : 'Não entregue'); },
+      chip(al) { return { 'Avaliada': 'bg-emerald-100 text-emerald-800 dark:bg-emerald-400/15 dark:text-emerald-300', 'Entregue': 'bg-ps-suave text-ps-texto dark:bg-ps-noite3 dark:text-ps-claro', 'Não entregue': 'bg-ps-fundo text-ps-cinza dark:bg-ps-noite3 dark:text-slate-400' }[this.sit(al)]; },
+      cor(al) { return { 'Avaliada': 'text-emerald-700 dark:text-emerald-400', 'Entregue': 'text-ps-texto dark:text-ps-claro', 'Não entregue': 'text-ps-cinza dark:text-slate-400' }[this.sit(al)]; },
+      lista() {
+        var self = this, f = this.filtro;
+        return this.$store.ps.alunosDe().filter(function (a) {
+          var s = self.sit(a.id);
+          return f === 'Todos' || (f === 'Entregues' && s !== 'Não entregue') || (f === 'Avaliadas' && s === 'Avaliada') || (f === 'Não entregues' && s === 'Não entregue');
+        });
+      },
+      resumo() {
+        var self = this, al = this.$store.ps.alunosDe();
+        var c = function (x) { return al.filter(function (a) { return self.sit(a.id) === x; }).length; };
+        return [{ n: 'Trainees', v: al.length }, { n: 'Entregues', v: al.length - c('Não entregue') }, { n: 'Avaliadas', v: c('Avaliada') }, { n: 'Não entregues', v: c('Não entregue') }];
+      },
+      lembrar() {
+        var n = this.resumo()[3].v;
+        this.$store.ps.avisar(n ? 'Lembrete enviado para ' + n + ' trainee(s) (demo).' : 'Todos já entregaram.');
+      }
+    };
+  }
+</script>
+</body>
+</html>

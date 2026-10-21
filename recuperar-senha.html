@@ -1,0 +1,65 @@
+<!doctype html>
+<html lang="pt-BR" data-pagina="recuperar-senha">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Recuperar senha | Sala PS</title>
+<link rel="icon" type="image/png" href="img/logo-ps.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<script src="https://cdn.tailwindcss.com"></script>
+<script src="js/tw.js"></script>
+<link rel="stylesheet" href="css/sala.css">
+<script defer src="https://cdn.jsdelivr.net/npm/@alpinejs/collapse@3.14.1/dist/cdn.min.js"></script>
+<script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.14.1/dist/cdn.min.js"></script>
+</head>
+
+<body x-data="{ email: '', enviado: false, erro: '' }" class="font-sans bg-ps-fundo text-ps-escuro dark:bg-ps-noite dark:text-slate-100 min-h-screen flex flex-col">
+
+<header class="h-16 px-4 sm:px-6 flex items-center justify-between">
+  <a href="login.html" class="flex items-center gap-2.5 rounded-lg focus:outline-none focus-visible:ring-2 focus-visible:ring-ps-azul">
+    <img src="img/logo-ps.png" alt="" width="133" height="180" class="h-7 w-auto">
+    <span class="font-extrabold text-lg tracking-tight">Sala <span class="text-ps-texto dark:text-ps-claro">PS</span></span>
+  </a>
+  <button type="button" @click="$store.ps.alternarTema()" class="h-11 w-11 rounded-full inline-flex items-center justify-center hover:bg-white dark:hover:bg-ps-noite2" :aria-label="$store.ps.escuro ? 'Ativar modo claro' : 'Ativar modo escuro'">
+    <span x-show="$store.ps.escuro" x-cloak x-html="ic('sol')"></span><span x-show="!$store.ps.escuro" x-html="ic('lua')"></span>
+  </button>
+</header>
+
+<main id="conteudo" class="flex-1 px-4 sm:px-6 py-10 flex items-start sm:items-center justify-center">
+  <div class="w-full max-w-md rounded-3xl bg-white dark:bg-ps-noite2 border border-ps-linha dark:border-ps-noite3 p-6 sm:p-10">
+
+    <div x-show="!enviado">
+      <span class="h-14 w-14 rounded-2xl bg-ps-suave dark:bg-ps-noite3 text-ps-texto dark:text-ps-claro inline-flex items-center justify-center" x-html="ic('cadeado', '!w-7 !h-7')"></span>
+      <h1 class="mt-5 text-2xl sm:text-3xl font-extrabold">Esqueceu a senha?</h1>
+      <p class="mt-2 text-[15px] leading-7 text-ps-cinza dark:text-slate-400">Digite o e-mail da sua conta. Vamos enviar um link para você criar uma senha nova.</p>
+      <form class="mt-6 flex flex-col gap-4" novalidate
+            @submit.prevent="if (!/^\S+@\S+\.\S+$/.test(email.trim())) { erro = 'Digite um e-mail válido.'; $refs.email.focus(); } else { erro = ''; enviado = true; }">
+        <div>
+          <label for="email" class="text-sm font-semibold">E-mail</label>
+          <input id="email" x-ref="email" type="email" x-model="email" autocomplete="email" class="mt-2 w-full h-12 rounded-xl border bg-white dark:bg-ps-noite px-4 text-[15px] focus:outline-none focus:ring-2 focus:ring-ps-azul" :class="erro ? 'border-red-500' : 'border-ps-linha dark:border-ps-noite3'" :aria-invalid="(!!erro).toString()" aria-describedby="e-email">
+          <p id="e-email" x-show="erro" class="mt-1 text-sm font-semibold text-red-700 dark:text-red-400" x-text="erro"></p>
+        </div>
+        <button type="submit" class="h-12 rounded-full text-[15px] font-bold bg-ps-azul text-ps-escuro hover:brightness-105">Enviar link</button>
+      </form>
+    </div>
+
+    <div x-show="enviado" x-cloak class="text-center" role="status">
+      <span class="mx-auto h-14 w-14 rounded-2xl bg-emerald-100 text-emerald-700 dark:bg-emerald-400/15 dark:text-emerald-300 inline-flex items-center justify-center" x-html="ic('email', '!w-7 !h-7')"></span>
+      <h1 class="mt-5 text-2xl sm:text-3xl font-extrabold">Confira seu e-mail</h1>
+      <p class="mt-2 text-[15px] leading-7 text-ps-cinza dark:text-slate-400">Se existir uma conta com <b class="text-ps-escuro dark:text-white" x-text="email"></b>, você vai receber o link em alguns minutos. Olhe também a caixa de spam.</p>
+      <p class="mt-4 text-xs text-ps-cinza dark:text-slate-400">Demonstração: nenhum e-mail é enviado de verdade.</p>
+      <button type="button" @click="$store.ps.avisar('Link reenviado (demo).')" class="mt-6 h-11 px-5 rounded-full text-sm font-semibold border border-ps-linha dark:border-ps-noite3 hover:bg-ps-fundo dark:hover:bg-ps-noite3">Reenviar</button>
+    </div>
+
+    <p class="mt-8 text-sm text-center"><a href="login.html" class="inline-flex items-center gap-1 font-semibold text-ps-texto dark:text-ps-claro hover:underline"><span x-html="ic('voltar', '!w-4 !h-4')"></span>Voltar para o login</a></p>
+  </div>
+</main>
+
+<div x-show="$store.ps.toast" x-cloak x-transition class="fixed bottom-4 left-4 right-4 sm:right-auto sm:max-w-sm z-[60] rounded-xl bg-ps-escuro text-white dark:bg-white dark:text-ps-escuro px-5 py-4 text-sm shadow-lg" role="status" aria-live="polite" x-text="$store.ps.toast"></div>
+
+<script src="js/dados.js"></script>
+<script src="js/app.js"></script>
+</body>
+</html>

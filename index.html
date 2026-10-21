@@ -1,0 +1,156 @@
+<!doctype html>
+<html lang="pt-BR" data-pagina="index">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Início | Sala PS</title>
+<link rel="icon" type="image/png" href="img/logo-ps.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<script src="https://cdn.tailwindcss.com"></script>
+<script src="js/tw.js"></script>
+<link rel="stylesheet" href="css/sala.css">
+<script defer src="https://cdn.jsdelivr.net/npm/@alpinejs/collapse@3.14.1/dist/cdn.min.js"></script>
+<script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.14.1/dist/cdn.min.js"></script>
+</head>
+
+<body x-data="pagina()" :class="$store.ps.menu && 'overflow-hidden lg:overflow-auto'" class="font-sans bg-ps-fundo text-ps-escuro dark:bg-ps-noite dark:text-slate-100 min-h-screen">
+
+<main id="conteudo" class="pt-16 lg:pl-72 min-h-screen">
+  <section class="px-4 sm:px-6 py-6 sm:py-8 max-w-7xl" aria-labelledby="t-inicio">
+    <h1 id="t-inicio" class="text-2xl sm:text-3xl font-extrabold">
+      Olá, <span x-text="($store.ps.usuario && $store.ps.usuario.nome) || ''"></span>
+    </h1>
+    <p class="mt-1 text-[15px] text-ps-cinza dark:text-slate-400"
+       x-text="$store.ps.instrutor()
+         ? ($store.ps.paraCorrigir() ? 'Você tem ' + $store.ps.paraCorrigir() + ' entregas para corrigir.' : 'Nenhuma entrega esperando correção.')
+         : ($store.ps.totalPendentes() ? 'Você tem ' + $store.ps.totalPendentes() + ' atividades pendentes.' : 'Tudo em dia por aqui.')"></p>
+
+    <div class="mt-6 grid gap-5 sm:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-4">
+      <template x-for="t in $store.ps.turmas()" :key="t.id">
+        <article class="bg-white dark:bg-ps-noite2 border border-ps-linha dark:border-ps-noite3 rounded-2xl overflow-hidden flex flex-col hover:shadow-md transition-shadow">
+          <a :href="'turma.html?t=' + t.id" class="relative block h-28 px-5 pt-4 text-white focus:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-white" :style="'background:' + t.cor">
+            <svg class="banner-deco" viewBox="0 0 400 112" preserveAspectRatio="xMaxYMid slice" aria-hidden="true">
+              <circle cx="360" cy="20" r="70" fill="none" stroke="#53CCF5" stroke-width="2"/>
+              <circle cx="360" cy="20" r="44" fill="none" stroke="#53CCF5" stroke-width="2"/>
+              <path d="M250 112 L320 40 L390 112 Z" fill="#00AFE3"/>
+            </svg>
+            <span class="relative block text-xl font-extrabold leading-tight truncate pr-14 hover:underline" x-text="t.nome"></span>
+            <span class="relative block text-sm opacity-90 truncate" x-text="t.secao"></span>
+            <span class="relative block mt-2 text-sm opacity-90 truncate" x-text="t.instrutor"></span>
+          </a>
+
+          <div class="relative px-5 pt-8 pb-4 flex-1 flex flex-col gap-3">
+            <span class="absolute -top-8 right-5 h-16 w-16 rounded-full border-4 border-white dark:border-ps-noite2 bg-ps-suave dark:bg-ps-noite3 text-ps-texto dark:text-ps-claro text-2xl font-extrabold inline-flex items-center justify-center" aria-hidden="true" x-text="t.nome.charAt(0)"></span>
+
+            <!-- Trainee: próximas pendências -->
+            <div class="min-h-[56px]" x-show="!$store.ps.instrutor()">
+              <template x-if="$store.ps.pendentes(t).length === 0">
+                <p class="text-sm text-ps-cinza dark:text-slate-400">Nenhuma pendência nesta turma.</p>
+              </template>
+              <template x-for="it in $store.ps.pendentes(t).slice(0, 2)" :key="it.id">
+                <a :href="$store.ps.urlItem(t.id, it)" class="block text-sm py-0.5 truncate hover:underline">
+                  <span class="text-ps-cinza dark:text-slate-400" x-text="$store.ps.rotulo(it.tipo) + ': '"></span><span class="font-semibold" x-text="it.titulo"></span>
+                </a>
+              </template>
+            </div>
+            <!-- Instrutor: entregas para corrigir -->
+            <div class="min-h-[56px]" x-show="$store.ps.instrutor()" x-cloak>
+              <a :href="'corrigir.html?t=' + t.id" class="inline-flex items-center gap-2 text-sm font-semibold text-ps-texto dark:text-ps-claro hover:underline">
+                <span x-html="ic('corrigir', '!w-4 !h-4')"></span>
+                <span x-text="$store.ps.paraCorrigir(t) ? $store.ps.paraCorrigir(t) + ' entregas para corrigir' : 'Nada para corrigir'"></span>
+              </a>
+            </div>
+
+            <div class="mt-auto" x-show="!$store.ps.instrutor()">
+              <div class="flex justify-between text-xs text-ps-cinza dark:text-slate-400 mb-1.5">
+                <span>Progresso</span><span x-text="$store.ps.progresso(t) + '%'"></span>
+              </div>
+              <div class="h-2 rounded-full bg-ps-fundo dark:bg-ps-noite3 overflow-hidden" role="progressbar" :aria-valuenow="$store.ps.progresso(t)" aria-valuemin="0" aria-valuemax="100" :aria-label="'Progresso em ' + t.nome">
+                <div class="h-full rounded-full bg-ps-azul transition-all" :style="'width:' + $store.ps.progresso(t) + '%'"></div>
+              </div>
+            </div>
+          </div>
+
+          <div class="border-t border-ps-linha dark:border-ps-noite3 px-3 py-2 flex justify-end gap-1">
+            <a x-show="$store.ps.instrutor()" x-cloak :href="'turma-config.html?t=' + t.id" class="h-11 w-11 rounded-full inline-flex items-center justify-center text-ps-cinza dark:text-slate-400 hover:bg-ps-fundo dark:hover:bg-ps-noite3" :aria-label="'Configurar ' + t.nome" title="Configurar turma" x-html="ic('engrenagem')"></a>
+            <a :href="'turma.html?t=' + t.id + '&aba=atividades'" class="h-11 w-11 rounded-full inline-flex items-center justify-center text-ps-cinza dark:text-slate-400 hover:bg-ps-fundo dark:hover:bg-ps-noite3" :aria-label="'Atividades de ' + t.nome" title="Atividades" x-html="ic('tarefa')"></a>
+            <a :href="'turma.html?t=' + t.id + '&aba=pessoas'" class="h-11 w-11 rounded-full inline-flex items-center justify-center text-ps-cinza dark:text-slate-400 hover:bg-ps-fundo dark:hover:bg-ps-noite3" :aria-label="'Pessoas de ' + t.nome" title="Pessoas" x-html="ic('pessoas')"></a>
+          </div>
+        </article>
+      </template>
+    </div>
+  </section>
+</main>
+
+<!-- Modais: participar e criar turma -->
+<div x-show="modal" x-cloak class="fixed inset-0 z-50 flex items-end sm:items-center justify-center sm:p-4" @keydown.escape.window="fechar()" role="dialog" aria-modal="true" :aria-label="modal === 'criar' ? 'Criar turma' : 'Participar da turma'">
+  <div class="absolute inset-0 bg-black/50" @click="fechar()"></div>
+  <div class="relative w-full sm:max-w-md bg-white dark:bg-ps-noite2 rounded-t-2xl sm:rounded-2xl p-6 shadow-xl">
+    <form x-show="modal === 'participar'" @submit.prevent="participar()">
+      <h2 class="text-xl font-extrabold">Participar da turma</h2>
+      <p class="mt-2 text-sm text-ps-cinza dark:text-slate-400">Peça o código ao instrutor e digite aqui.</p>
+      <label for="codigo" class="block mt-5 text-sm font-semibold">Código da turma</label>
+      <input id="codigo" x-ref="codigo" x-model="form.codigo" type="text" autocomplete="off" class="mt-2 w-full h-12 rounded-xl border border-ps-linha dark:border-ps-noite3 bg-transparent px-4 focus:outline-none focus:ring-2 focus:ring-ps-azul">
+      <div class="mt-6 flex justify-end gap-2">
+        <button type="button" @click="fechar()" class="h-11 px-5 rounded-full text-sm font-semibold hover:bg-ps-fundo dark:hover:bg-ps-noite3">Cancelar</button>
+        <button type="submit" :disabled="!form.codigo.trim()" class="h-11 px-5 rounded-full text-sm font-bold bg-ps-azul text-ps-escuro disabled:opacity-40 disabled:cursor-not-allowed">Participar</button>
+      </div>
+    </form>
+    <form x-show="modal === 'criar'" @submit.prevent="criar()">
+      <h2 class="text-xl font-extrabold">Criar turma</h2>
+      <label for="nome-turma" class="block mt-5 text-sm font-semibold">Nome da turma (obrigatório)</label>
+      <input id="nome-turma" x-ref="nome" x-model="form.nome" type="text" class="mt-2 w-full h-12 rounded-xl border border-ps-linha dark:border-ps-noite3 bg-transparent px-4 focus:outline-none focus:ring-2 focus:ring-ps-azul">
+      <label for="secao-turma" class="block mt-4 text-sm font-semibold">Seção</label>
+      <input id="secao-turma" x-model="form.secao" type="text" placeholder="Ex.: Trainee PSEL26/2" class="mt-2 w-full h-12 rounded-xl border border-ps-linha dark:border-ps-noite3 bg-transparent px-4 focus:outline-none focus:ring-2 focus:ring-ps-azul">
+      <div class="mt-6 flex justify-end gap-2">
+        <button type="button" @click="fechar()" class="h-11 px-5 rounded-full text-sm font-semibold hover:bg-ps-fundo dark:hover:bg-ps-noite3">Cancelar</button>
+        <button type="submit" :disabled="!form.nome.trim()" class="h-11 px-5 rounded-full text-sm font-bold bg-ps-azul text-ps-escuro disabled:opacity-40 disabled:cursor-not-allowed">Criar</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<script src="js/dados.js"></script>
+<script src="js/app.js"></script>
+<script src="js/layout.js"></script>
+<script>
+  function pagina() {
+    return {
+      modal: null, form: { codigo: '', nome: '', secao: '' },
+      init() {
+        var self = this;
+        this.$store.ps.titulo = '';
+        this.lerHash();
+        window.addEventListener('hashchange', function () { self.lerHash(); });
+      },
+      lerHash() {
+        var h = location.hash.replace('#', '');
+        if (h === 'participar' || h === 'criar') this.abrir(h);
+      },
+      abrir(tipo) {
+        var self = this;
+        this.form = { codigo: '', nome: '', secao: '' };
+        this.modal = tipo;
+        this.$nextTick(function () { var el = self.$refs[tipo === 'criar' ? 'nome' : 'codigo']; if (el) el.focus(); });
+      },
+      fechar() {
+        this.modal = null;
+        if (location.hash) history.replaceState(null, '', location.pathname + location.search);
+      },
+      participar() {
+        this.fechar();
+        this.$store.ps.avisar('Demo: na versão final, o código adiciona você à turma.');
+      },
+      criar() {
+        var nome = this.form.nome.trim();
+        if (!nome) return;
+        var id = this.$store.ps.criarTurma(nome, this.form.secao.trim());
+        location.href = 'turma.html?t=' + id;
+      }
+    };
+  }
+</script>
+</body>
+</html>

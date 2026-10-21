@@ -1,0 +1,25 @@
+/* Sala PS | estilos que o Tailwind não cobre */
+[x-cloak] { display: none !important; }
+body { -webkit-font-smoothing: antialiased; }
+
+.ic {
+  width: 1.25rem; height: 1.25rem; flex-shrink: 0;
+  fill: none; stroke: currentColor; stroke-width: 2;
+  stroke-linecap: round; stroke-linejoin: round;
+}
+.banner-deco { position: absolute; inset: 0; pointer-events: none; opacity: .22; }
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after { transition: none !important; animation: none !important; scroll-behavior: auto !important; }
+}
+
+/* Configurações > Reduzir animações */
+.reduzir *, .reduzir *::before, .reduzir *::after { transition: none !important; animation: none !important; scroll-behavior: auto !important; }
+
+/* Certificado: imprime só o certificado */
+@media print {
+  body * { visibility: hidden !important; }
+  #certificado, #certificado * { visibility: visible !important; }
+  #certificado { position: fixed; inset: 0; margin: 0; box-shadow: none; }
+  @page { size: A4 landscape; margin: 0; }
+}

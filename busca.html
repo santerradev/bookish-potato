@@ -1,0 +1,99 @@
+<!doctype html>
+<html lang="pt-BR" data-pagina="busca">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Busca | Sala PS</title>
+<link rel="icon" type="image/png" href="img/logo-ps.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<script src="https://cdn.tailwindcss.com"></script>
+<script src="js/tw.js"></script>
+<link rel="stylesheet" href="css/sala.css">
+<script defer src="https://cdn.jsdelivr.net/npm/@alpinejs/collapse@3.14.1/dist/cdn.min.js"></script>
+<script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.14.1/dist/cdn.min.js"></script>
+</head>
+
+<body x-data="pagina()" :class="$store.ps.menu && 'overflow-hidden lg:overflow-auto'" class="font-sans bg-ps-fundo text-ps-escuro dark:bg-ps-noite dark:text-slate-100 min-h-screen">
+
+<main id="conteudo" class="pt-16 lg:pl-72 min-h-screen">
+  <section class="px-4 sm:px-6 py-6 sm:py-8 max-w-3xl mx-auto" aria-labelledby="t-busca">
+    <h1 id="t-busca" class="text-2xl sm:text-3xl font-extrabold">Busca</h1>
+    <form role="search" class="mt-5 flex items-center gap-3 h-14 px-5 rounded-2xl bg-white dark:bg-ps-noite2 border border-ps-linha dark:border-ps-noite3 focus-within:ring-2 focus-within:ring-ps-azul" @submit.prevent>
+      <span class="text-ps-cinza dark:text-slate-400" x-html="ic('busca')"></span>
+      <label for="q" class="sr-only">Buscar</label>
+      <input id="q" x-ref="q" type="text" enterkeyhint="search" x-model="q" @input.debounce.200ms="atualizarUrl()" placeholder="Turmas, materiais, atividades, avisos e eventos" class="flex-1 min-w-0 bg-transparent text-base focus:outline-none" autocomplete="off">
+      <button type="button" x-show="q" @click="q = ''; atualizarUrl(); $refs.q.focus()" class="h-9 w-9 rounded-full inline-flex items-center justify-center text-ps-cinza hover:bg-ps-fundo dark:hover:bg-ps-noite3" aria-label="Limpar busca" x-html="ic('x', '!w-4 !h-4')"></button>
+    </form>
+
+    <!-- Sugestões -->
+    <div x-show="q.trim().length < 2" class="mt-6">
+      <p class="text-sm font-semibold text-ps-cinza dark:text-slate-400">Experimente buscar</p>
+      <div class="mt-3 flex flex-wrap gap-2">
+        <template x-for="s in ['5W2H', 'POP', 'Persona', 'Canvas', 'NPS', 'Kanban', 'Imersão', 'Pitch']" :key="s">
+          <button type="button" @click="q = s; atualizarUrl()" class="h-10 px-4 rounded-full border border-ps-linha dark:border-ps-noite3 bg-white dark:bg-ps-noite2 text-sm font-semibold hover:border-ps-azul" x-text="s"></button>
+        </template>
+      </div>
+    </div>
+
+    <!-- Resultados -->
+    <div x-show="q.trim().length >= 2" x-cloak class="mt-6">
+      <p class="text-sm text-ps-cinza dark:text-slate-400" aria-live="polite" x-text="resultados().length + (resultados().length === 1 ? ' resultado' : ' resultados') + ' para “' + q.trim() + '”'"></p>
+      <ul class="mt-3 flex flex-col gap-2">
+        <template x-for="(r, i) in resultados()" :key="i">
+          <li>
+            <a :href="r.link" class="flex gap-4 p-4 rounded-2xl bg-white dark:bg-ps-noite2 border border-ps-linha dark:border-ps-noite3 hover:shadow-md focus:outline-none focus-visible:ring-2 focus-visible:ring-ps-azul">
+              <span class="h-11 w-11 rounded-full inline-flex items-center justify-center shrink-0 bg-ps-suave text-ps-texto dark:bg-ps-noite3 dark:text-ps-claro" x-html="ic(r.icone)"></span>
+              <span class="flex-1 min-w-0">
+                <span class="flex flex-wrap items-center gap-2">
+                  <span class="font-bold" x-html="destacar(r.titulo)"></span>
+                  <span class="text-[11px] font-bold px-2 py-0.5 rounded-full bg-ps-fundo dark:bg-ps-noite3 text-ps-cinza dark:text-slate-300" x-text="r.tipo"></span>
+                </span>
+                <span class="block text-sm text-ps-cinza dark:text-slate-400" x-text="r.sub"></span>
+                <span x-show="r.trecho" class="mt-1 block text-sm line-clamp-2" x-html="destacar(trecho(r.trecho))"></span>
+              </span>
+            </a>
+          </li>
+        </template>
+      </ul>
+      <template x-if="resultados().length === 0">
+        <div class="text-center py-14">
+          <span class="text-ps-azul inline-flex" x-html="ic('busca', '!w-12 !h-12')"></span>
+          <p class="mt-4 font-semibold">Nada encontrado.</p>
+          <p class="mt-1 text-sm text-ps-cinza dark:text-slate-400">Tente outra palavra ou veja a <a href="ajuda.html" class="underline">Ajuda</a>.</p>
+        </div>
+      </template>
+    </div>
+  </section>
+</main>
+
+<script src="js/dados.js"></script>
+<script src="js/app.js"></script>
+<script src="js/layout.js"></script>
+<script>
+  function escapar(t) { return String(t).replace(/[&<>"']/g, function (c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]; }); }
+  function pagina() {
+    return {
+      q: param('q') || '',
+      init() { var self = this; this.$store.ps.titulo = 'Busca'; this.$nextTick(function () { self.$refs.q.focus(); }); },
+      resultados() { return this.$store.ps.buscar(this.q); },
+      atualizarUrl() { history.replaceState(null, '', 'busca.html' + (this.q.trim() ? '?q=' + encodeURIComponent(this.q.trim()) : '')); },
+      trecho(t) {
+        var q = this.q.trim().toLowerCase(), i = t.toLowerCase().indexOf(q);
+        if (i < 0) return t.length > 140 ? t.slice(0, 140) + '...' : t;
+        var ini = Math.max(0, i - 50);
+        return (ini ? '...' : '') + t.slice(ini, i + q.length + 90) + (i + q.length + 90 < t.length ? '...' : '');
+      },
+      destacar(t) {
+        var q = this.q.trim();
+        var seguro = escapar(t);
+        if (q.length < 2) return seguro;
+        var re = new RegExp('(' + escapar(q).replace(/[.*+?^${}()|[\]\\]/g, '\\$&') + ')', 'gi');
+        return seguro.replace(re, '<mark class="bg-ps-claro/40 text-inherit rounded px-0.5">$1</mark>');
+      }
+    };
+  }
+</script>
+</body>
+</html>

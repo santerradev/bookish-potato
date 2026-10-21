@@ -1,0 +1,132 @@
+<!doctype html>
+<html lang="pt-BR" data-pagina="login">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Entrar | Sala PS</title>
+<meta name="description" content="Ambiente de aprendizagem da PS Júnior Consultoria.">
+<link rel="icon" type="image/png" href="img/logo-ps.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<script src="https://cdn.tailwindcss.com"></script>
+<script src="js/tw.js"></script>
+<link rel="stylesheet" href="css/sala.css">
+<script defer src="https://cdn.jsdelivr.net/npm/@alpinejs/collapse@3.14.1/dist/cdn.min.js"></script>
+<script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.14.1/dist/cdn.min.js"></script>
+</head>
+
+<body x-data="login()" class="font-sans bg-ps-fundo text-ps-escuro dark:bg-ps-noite dark:text-slate-100 min-h-screen">
+
+<div class="min-h-screen grid lg:grid-cols-2">
+
+  <!-- Lado da marca -->
+  <aside class="relative overflow-hidden bg-ps-escuro text-white px-6 sm:px-10 py-8 lg:p-14 flex flex-col">
+    <svg class="banner-deco" viewBox="0 0 600 800" preserveAspectRatio="xMaxYMax slice" aria-hidden="true">
+      <circle cx="560" cy="120" r="220" fill="none" stroke="#53CCF5" stroke-width="3"/>
+      <circle cx="560" cy="120" r="140" fill="none" stroke="#53CCF5" stroke-width="3"/>
+      <path d="M260 800 L430 560 L600 800 Z" fill="#00AFE3"/>
+    </svg>
+    <div class="relative flex items-center gap-3">
+      <img src="img/logo-ps.png" alt="" width="133" height="180" class="h-10 w-auto">
+      <span class="text-2xl font-extrabold tracking-tight">Sala <span class="text-ps-claro">PS</span></span>
+    </div>
+    <div class="relative mt-8 lg:mt-auto">
+      <h1 class="text-3xl sm:text-4xl lg:text-5xl font-extrabold leading-tight">Aprender junto,<br class="hidden sm:block"> crescer como PSer.</h1>
+      <p class="mt-4 max-w-md text-[15px] leading-7 text-slate-300">Ambiente de aprendizagem da PS Júnior Consultoria: materiais, atividades e avisos do trainee em um só lugar.</p>
+    </div>
+    <img src="img/equipe-ps.jpg" alt="Equipe da PS Júnior reunida em uma sala de reuniões" width="1080" height="608"
+         class="relative hidden lg:block mt-10 w-full max-w-lg aspect-[16/9] object-cover rounded-2xl">
+    <p class="relative hidden lg:block mt-10 text-xs font-bold tracking-[1.5px] text-slate-400">PS JÚNIOR PSEL26/2</p>
+  </aside>
+
+  <!-- Formulário -->
+  <main id="conteudo" class="relative flex items-center justify-center px-6 sm:px-10 py-10">
+    <button type="button" @click="$store.ps.alternarTema()" class="absolute top-4 right-4 h-11 w-11 rounded-full inline-flex items-center justify-center hover:bg-white dark:hover:bg-ps-noite2 focus:outline-none focus-visible:ring-2 focus-visible:ring-ps-azul"
+            :aria-label="$store.ps.escuro ? 'Ativar modo claro' : 'Ativar modo escuro'">
+      <span x-show="$store.ps.escuro" x-cloak x-html="ic('sol')"></span>
+      <span x-show="!$store.ps.escuro" x-html="ic('lua')"></span>
+    </button>
+
+    <div class="w-full max-w-md">
+      <template x-if="$store.ps.usuario">
+        <div class="mb-6 rounded-2xl bg-ps-suave dark:bg-ps-noite2 border border-ps-linha dark:border-ps-noite3 p-4 flex items-center gap-3">
+          <span class="h-10 w-10 rounded-full bg-ps-azul text-ps-escuro font-bold inline-flex items-center justify-center shrink-0" x-text="$store.ps.iniciais()"></span>
+          <p class="text-sm flex-1 min-w-0">Você já está conectado como <b x-text="$store.ps.usuario.nome"></b>.</p>
+          <a href="index.html" class="text-sm font-bold text-ps-texto dark:text-ps-claro hover:underline shrink-0">Continuar</a>
+        </div>
+      </template>
+
+      <h2 class="text-3xl font-extrabold">Entrar</h2>
+      <p class="mt-2 text-[15px] text-ps-cinza dark:text-slate-400">Use seu e-mail da PS.</p>
+
+      <form class="mt-8 flex flex-col gap-5" @submit.prevent="entrar()" novalidate>
+        <div>
+          <label for="email" class="text-sm font-semibold">E-mail</label>
+          <input id="email" type="email" x-model="email" autocomplete="username" placeholder="nome@psjunior.com"
+                 class="mt-2 w-full h-12 rounded-xl border border-ps-linha dark:border-ps-noite3 bg-white dark:bg-ps-noite2 px-4 text-[15px] focus:outline-none focus:ring-2 focus:ring-ps-azul"
+                 :aria-invalid="(!!erro && !email.trim()).toString()" aria-describedby="erro-login">
+        </div>
+        <div>
+          <div class="flex items-center justify-between">
+            <label for="senha" class="text-sm font-semibold">Senha</label>
+            <a href="recuperar-senha.html" class="text-sm font-semibold text-ps-texto dark:text-ps-claro hover:underline">Esqueci minha senha</a>
+          </div>
+          <div class="relative mt-2">
+            <input id="senha" :type="ver ? 'text' : 'password'" x-model="senha" autocomplete="current-password"
+                   class="w-full h-12 rounded-xl border border-ps-linha dark:border-ps-noite3 bg-white dark:bg-ps-noite2 pl-4 pr-12 text-[15px] focus:outline-none focus:ring-2 focus:ring-ps-azul"
+                   :aria-invalid="(!!erro && !senha).toString()" aria-describedby="erro-login">
+            <button type="button" @click="ver = !ver" class="absolute right-1 top-1/2 -translate-y-1/2 h-10 w-10 rounded-lg inline-flex items-center justify-center text-ps-cinza dark:text-slate-400 hover:bg-ps-fundo dark:hover:bg-ps-noite3"
+                    :aria-label="ver ? 'Esconder senha' : 'Mostrar senha'">
+              <span x-html="ic(ver ? 'olhoFechado' : 'olho')"></span>
+            </button>
+          </div>
+        </div>
+        <p id="erro-login" x-show="erro" x-cloak class="text-sm font-semibold text-red-700 dark:text-red-400" role="alert" x-text="erro"></p>
+        <button type="submit" class="h-12 rounded-full text-[15px] font-bold bg-ps-azul text-ps-escuro hover:brightness-105 focus:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-ps-texto">Entrar</button>
+      </form>
+
+      <div class="mt-8 flex items-center gap-4 text-xs font-bold tracking-wider text-ps-cinza dark:text-slate-400">
+        <span class="h-px flex-1 bg-ps-linha dark:bg-ps-noite3"></span>ENTRAR NA DEMO COMO<span class="h-px flex-1 bg-ps-linha dark:bg-ps-noite3"></span>
+      </div>
+      <div class="mt-4 grid grid-cols-3 gap-3">
+        <button type="button" @click="demo('trainee')" class="h-12 rounded-xl border border-ps-linha dark:border-ps-noite3 bg-white dark:bg-ps-noite2 text-sm font-semibold inline-flex items-center justify-center gap-2 hover:border-ps-azul focus:outline-none focus-visible:ring-2 focus-visible:ring-ps-azul">
+          <span x-html="ic('perfil')"></span>Trainee
+        </button>
+        <button type="button" @click="demo('instrutor')" class="h-12 rounded-xl border border-ps-linha dark:border-ps-noite3 bg-white dark:bg-ps-noite2 text-sm font-semibold inline-flex items-center justify-center gap-2 hover:border-ps-azul focus:outline-none focus-visible:ring-2 focus-visible:ring-ps-azul">
+          <span x-html="ic('corrigir')"></span>Instrutor
+        </button>
+        <button type="button" @click="demo('admin')" class="h-12 rounded-xl border border-ps-linha dark:border-ps-noite3 bg-white dark:bg-ps-noite2 text-sm font-semibold inline-flex items-center justify-center gap-2 hover:border-ps-azul focus:outline-none focus-visible:ring-2 focus-visible:ring-ps-azul">
+          <span x-html="ic('escudo')"></span>Admin
+        </button>
+      </div>
+      <p class="mt-6 text-sm text-center text-ps-cinza dark:text-slate-400">Ainda não tem conta? <a href="cadastro.html" class="font-semibold text-ps-texto dark:text-ps-claro hover:underline">Criar conta</a></p>
+      <p class="mt-4 text-xs leading-relaxed text-ps-cinza dark:text-slate-400">Demonstração de design: qualquer e-mail e senha entram como trainee. Nenhum dado é enviado; tudo fica salvo só neste navegador.</p>
+    </div>
+  </main>
+</div>
+
+<div x-show="$store.ps.toast" x-cloak x-transition class="fixed bottom-4 left-4 right-4 sm:right-auto sm:max-w-sm z-[60] rounded-xl bg-ps-escuro text-white dark:bg-white dark:text-ps-escuro px-5 py-4 text-sm shadow-lg" role="status" aria-live="polite" x-text="$store.ps.toast"></div>
+
+<script src="js/dados.js"></script>
+<script src="js/app.js"></script>
+<script>
+  function login() {
+    return {
+      email: '', senha: '', ver: false, erro: '',
+      entrar() {
+        if (!this.email.trim() || !this.senha) { this.erro = 'Preencha e-mail e senha.'; return; }
+        var base = this.email.trim().split('@')[0].replace(/[._-]+/g, ' ');
+        var nome = base.split(' ').filter(Boolean).map(function (p) { return p.charAt(0).toUpperCase() + p.slice(1); }).join(' ');
+        this.$store.ps.entrar(nome || 'Trainee demo', 'trainee');
+        location.href = 'index.html';
+      },
+      demo(papel) {
+        this.$store.ps.entrar({ instrutor: 'Instrutor demo', admin: 'Admin demo' }[papel] || 'Trainee demo', papel);
+        location.href = 'index.html';
+      }
+    };
+  }
+</script>
+</body>
+</html>

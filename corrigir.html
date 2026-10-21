@@ -1,0 +1,243 @@
+<!doctype html>
+<html lang="pt-BR" data-pagina="corrigir">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Corrigir | Sala PS</title>
+<link rel="icon" type="image/png" href="img/logo-ps.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<script src="https://cdn.tailwindcss.com"></script>
+<script src="js/tw.js"></script>
+<link rel="stylesheet" href="css/sala.css">
+<script defer src="https://cdn.jsdelivr.net/npm/@alpinejs/collapse@3.14.1/dist/cdn.min.js"></script>
+<script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.14.1/dist/cdn.min.js"></script>
+</head>
+
+<body x-data="pagina()" :class="$store.ps.menu && 'overflow-hidden lg:overflow-auto'" class="font-sans bg-ps-fundo text-ps-escuro dark:bg-ps-noite dark:text-slate-100 min-h-screen">
+
+<main id="conteudo" class="pt-16 lg:pl-72 min-h-screen">
+
+  <!-- Trainee não acessa a correção -->
+  <section x-show="!$store.ps.instrutor()" class="px-4 sm:px-6 py-16 max-w-lg mx-auto text-center">
+    <span class="mx-auto h-16 w-16 rounded-2xl bg-ps-suave dark:bg-ps-noite2 text-ps-texto dark:text-ps-claro inline-flex items-center justify-center" x-html="ic('cadeado', '!w-8 !h-8')"></span>
+    <h1 class="mt-5 text-2xl font-extrabold">Esta tela é do instrutor</h1>
+    <p class="mt-2 text-[15px] text-ps-cinza dark:text-slate-400">Na demo, você pode trocar de visão para ver como o instrutor corrige as entregas.</p>
+    <button type="button" @click="$store.ps.trocarPapel()" class="mt-6 h-12 px-6 rounded-full text-[15px] font-bold bg-ps-azul text-ps-escuro inline-flex items-center gap-2 hover:brightness-105"><span x-html="ic('trocar', '!w-4 !h-4')"></span>Ver como instrutor</button>
+  </section>
+
+  <section x-show="$store.ps.instrutor()" x-cloak class="px-4 sm:px-6 py-6 sm:py-8 max-w-6xl mx-auto" aria-labelledby="t-corr">
+    <h1 id="t-corr" class="text-2xl sm:text-3xl font-extrabold">Corrigir entregas</h1>
+
+    <!-- Seleção -->
+    <div class="mt-5 grid gap-3 sm:grid-cols-2">
+      <label class="flex flex-col gap-1.5 text-sm">
+        <span class="font-semibold">Turma</span>
+        <select x-model="tid" @change="trocarTurma()" class="h-12 rounded-xl border border-ps-linha dark:border-ps-noite3 bg-white dark:bg-ps-noite2 px-3 focus:outline-none focus:ring-2 focus:ring-ps-azul">
+          <template x-for="t in turmasComTarefa()" :key="t.id"><option :value="t.id" x-text="t.nome" :selected="t.id === tid"></option></template>
+        </select>
+      </label>
+      <label class="flex flex-col gap-1.5 text-sm">
+        <span class="font-semibold">Tarefa</span>
+        <select x-model="aid" @change="trocarTarefa()" class="h-12 rounded-xl border border-ps-linha dark:border-ps-noite3 bg-white dark:bg-ps-noite2 px-3 focus:outline-none focus:ring-2 focus:ring-ps-azul">
+          <template x-for="it in tarefas()" :key="it.id"><option :value="it.id" x-text="it.titulo" :selected="it.id === aid"></option></template>
+        </select>
+      </label>
+    </div>
+
+    <template x-if="tarefa()">
+      <div class="mt-6 grid gap-6 lg:grid-cols-[320px_minmax(0,1fr)] items-start">
+
+        <!-- Lista de trainees -->
+        <div class="rounded-2xl border border-ps-linha dark:border-ps-noite3 bg-white dark:bg-ps-noite2 overflow-hidden">
+          <div class="px-5 py-4 border-b border-ps-linha dark:border-ps-noite3">
+            <p class="font-bold truncate" x-text="tarefa().titulo"></p>
+            <p class="mt-1 text-xs text-ps-cinza dark:text-slate-400" x-text="contagem()"></p>
+            <a :href="'entregas.html?t=' + tid + '&id=' + aid" class="mt-2 inline-block text-xs font-semibold text-ps-texto dark:text-ps-claro hover:underline">Ver lista de entregas</a>
+          </div>
+          <ul role="listbox" aria-label="Trainees">
+            <template x-for="a in alunos()" :key="a.id">
+              <li>
+                <button type="button" role="option" @click="selecionar(a.id)" :aria-selected="(sel === a.id).toString()"
+                        class="w-full flex items-center gap-3 px-5 py-3 text-left border-l-4 focus:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-ps-azul"
+                        :class="sel === a.id ? 'border-ps-azul bg-ps-suave dark:bg-ps-noite3' : 'border-transparent hover:bg-ps-fundo dark:hover:bg-ps-noite3'">
+                  <span class="h-9 w-9 rounded-full text-xs font-bold inline-flex items-center justify-center shrink-0"
+                        :class="a.id === 'voce' ? 'bg-ps-azul text-ps-escuro' : 'border-2 border-dashed border-ps-linha dark:border-ps-noite3 text-ps-cinza'"
+                        x-text="a.id === 'voce' ? $store.ps.iniciais() : $store.ps.iniciais(a.nome)"></span>
+                  <span class="flex-1 min-w-0">
+                    <span class="block text-sm font-semibold truncate" x-text="a.nome"></span>
+                    <span class="block text-xs" :class="corSituacao(a.id)" x-text="situacao(a.id)"></span>
+                  </span>
+                </button>
+              </li>
+            </template>
+          </ul>
+          <p class="px-5 py-3 text-xs text-ps-cinza dark:text-slate-400 border-t border-ps-linha dark:border-ps-noite3">"Sua entrega" é o que você fez na visão do trainee. Os demais são exemplos.</p>
+        </div>
+
+        <!-- Entrega selecionada -->
+        <div x-ref="detalhe" class="rounded-2xl border border-ps-linha dark:border-ps-noite3 bg-white dark:bg-ps-noite2 p-5 sm:p-6 scroll-mt-24">
+          <div class="flex flex-wrap items-center gap-3">
+            <h2 class="text-xl font-extrabold flex-1 min-w-0 truncate" x-text="aluno().nome"></h2>
+            <span class="inline-flex px-3 py-1 rounded-full text-xs font-bold" :class="corSituacao(sel, true)" x-text="situacao(sel)"></span>
+          </div>
+
+          <template x-if="!entrega()">
+            <div class="mt-6 rounded-xl border border-dashed border-ps-linha dark:border-ps-noite3 p-6 text-center">
+              <p class="font-semibold">Ainda não entregou.</p>
+              <p class="mt-1 text-sm text-ps-cinza dark:text-slate-400" x-show="sel === 'voce'">Troque para a visão do trainee, abra a tarefa e clique em "Entregar".</p>
+            </div>
+          </template>
+
+          <template x-if="entrega()">
+            <div>
+              <p class="mt-1 text-sm text-ps-cinza dark:text-slate-400" x-text="'Entregue em ' + entrega().data"></p>
+              <h3 class="mt-5 text-sm font-bold">Anexos</h3>
+              <template x-if="!(entrega().anexos || []).length">
+                <p class="mt-2 text-sm text-ps-cinza dark:text-slate-400">Marcada como concluída, sem anexos.</p>
+              </template>
+              <ul class="mt-2 grid sm:grid-cols-2 gap-2">
+                <template x-for="(an, i) in (entrega().anexos || [])" :key="i">
+                  <li class="flex items-center gap-3 rounded-xl border border-ps-linha dark:border-ps-noite3 p-3 min-w-0">
+                    <span class="text-ps-texto dark:text-ps-claro" x-html="ic(an.tipo === 'link' ? 'link' : 'arquivo')"></span>
+                    <span class="text-sm truncate" x-text="an.nome"></span>
+                  </li>
+                </template>
+              </ul>
+
+              <form class="mt-6 pt-6 border-t border-ps-linha dark:border-ps-noite3" @submit.prevent="devolver()" novalidate>
+                <div class="flex flex-wrap items-end gap-4">
+                  <div>
+                    <label for="nota" class="block text-sm font-semibold">Nota</label>
+                    <div class="mt-2 flex items-center gap-2">
+                      <input id="nota" x-ref="nota" type="text" inputmode="decimal" autocomplete="off" x-model="nota"
+                             class="w-24 h-12 rounded-xl border bg-transparent px-3 text-lg font-bold focus:outline-none focus:ring-2 focus:ring-ps-azul"
+                             :class="erro ? 'border-red-500' : 'border-ps-linha dark:border-ps-noite3'" :aria-invalid="(!!erro).toString()" aria-describedby="erro-nota">
+                      <span class="text-ps-cinza dark:text-slate-400" x-text="'/ ' + tarefa().pontos"></span>
+                    </div>
+                  </div>
+                  <p id="erro-nota" x-show="erro" class="pb-3 text-sm font-semibold text-red-700 dark:text-red-400" x-text="erro"></p>
+                </div>
+                <label for="feedback" class="block mt-4 text-sm font-semibold">Feedback para o trainee</label>
+                <textarea id="feedback" x-model="feedback" rows="4" placeholder="O que ficou bom e o que pode melhorar"
+                          class="mt-2 w-full rounded-xl border border-ps-linha dark:border-ps-noite3 bg-transparent p-3 text-[15px] focus:outline-none focus:ring-2 focus:ring-ps-azul"></textarea>
+                <div class="mt-4 flex flex-wrap gap-3">
+                  <button type="submit" class="h-12 px-6 rounded-full text-[15px] font-bold bg-ps-azul text-ps-escuro hover:brightness-105" x-text="$store.ps.correcao(aid, sel) ? 'Atualizar nota' : 'Devolver'"></button>
+                  <button type="button" x-show="proximoSemNota()" @click="selecionar(proximoSemNota())" class="h-12 px-5 rounded-full text-sm font-semibold border border-ps-linha dark:border-ps-noite3 inline-flex items-center gap-1 hover:bg-ps-fundo dark:hover:bg-ps-noite3">Próximo sem nota<span x-html="ic('direita', '!w-4 !h-4')"></span></button>
+                </div>
+              </form>
+            </div>
+          </template>
+
+          <!-- Conversa particular -->
+          <div class="mt-8 pt-6 border-t border-ps-linha dark:border-ps-noite3">
+            <h3 class="flex items-center gap-2 text-sm font-bold"><span x-html="ic('mensagem', '!w-4 !h-4')"></span>Comentários particulares</h3>
+            <template x-if="$store.ps.conversa(aid, sel).length === 0">
+              <p class="mt-2 text-sm text-ps-cinza dark:text-slate-400">Nenhum comentário ainda.</p>
+            </template>
+            <template x-for="(c, i) in $store.ps.conversa(aid, sel)" :key="i">
+              <div class="mt-3 flex gap-3">
+                <span class="h-8 w-8 rounded-full text-xs font-bold inline-flex items-center justify-center shrink-0"
+                      :class="c.instrutor ? 'bg-ps-escuro text-white dark:bg-ps-claro dark:text-ps-escuro' : 'bg-ps-azul text-ps-escuro'" x-text="$store.ps.iniciais(c.autor)"></span>
+                <div class="min-w-0">
+                  <p class="text-sm"><span class="font-semibold" x-text="c.autor"></span> <span class="text-xs text-ps-cinza dark:text-slate-400" x-text="c.data"></span></p>
+                  <p class="text-sm break-words" x-text="c.texto"></p>
+                </div>
+              </div>
+            </template>
+            <form @submit.prevent="$store.ps.comentarPrivado(aid, sel, msg); msg = ''" class="mt-4 flex items-center gap-2">
+              <label for="msg" class="sr-only">Responder ao trainee</label>
+              <input id="msg" type="text" x-model="msg" placeholder="Responder ao trainee" class="flex-1 min-w-0 h-11 rounded-full border border-ps-linha dark:border-ps-noite3 bg-transparent px-4 text-sm focus:outline-none focus:ring-2 focus:ring-ps-azul">
+              <button type="submit" :disabled="!msg.trim()" class="h-11 w-11 rounded-full inline-flex items-center justify-center text-ps-texto dark:text-ps-claro hover:bg-ps-fundo dark:hover:bg-ps-noite3 disabled:opacity-30" aria-label="Enviar comentário" x-html="ic('enviar')"></button>
+            </form>
+          </div>
+        </div>
+      </div>
+    </template>
+
+    <template x-if="!tarefa()">
+      <p class="mt-8 text-ps-cinza dark:text-slate-400">Nenhuma tarefa nesta turma.</p>
+    </template>
+  </section>
+</main>
+
+<script src="js/dados.js"></script>
+<script src="js/app.js"></script>
+<script src="js/layout.js"></script>
+<script>
+  function pagina() {
+    return {
+      tid: param('t') || '', aid: param('id') || '', sel: param('a') || 'voce',
+      nota: '', feedback: '', erro: '', msg: '',
+      init() {
+        var s = this.$store.ps;
+        s.titulo = 'Corrigir';
+        var ts = this.turmasComTarefa();
+        if (!ts.find(function (t) { return t.id === this.tid; }, this)) this.tid = ts.length ? ts[0].id : '';
+        if (!this.tarefas().find(function (i) { return i.id === this.aid; }, this)) this.aid = this.tarefas().length ? this.tarefas()[0].id : '';
+        s.turmaAtiva = this.tid;
+        this.carregar();
+      },
+      turmasComTarefa() {
+        var s = this.$store.ps;
+        return s.turmas().filter(function (t) { return s.itens(t).some(function (i) { return i.tipo === 'tarefa'; }); });
+      },
+      tarefas() {
+        var t = this.$store.ps.turma(this.tid);
+        return this.$store.ps.itens(t).filter(function (i) { return i.tipo === 'tarefa'; });
+      },
+      tarefa() { var id = this.aid; return this.tarefas().find(function (i) { return i.id === id; }) || null; },
+      alunos() { return [{ id: 'voce', nome: 'Sua entrega (demo)' }].concat(ALUNOS_EXEMPLO); },
+      aluno() { var id = this.sel; return this.alunos().find(function (a) { return a.id === id; }); },
+      entrega() { return this.$store.ps.entregaDe(this.aid, this.sel); },
+      situacao(al) {
+        var s = this.$store.ps, c = s.correcao(this.aid, al);
+        if (c) return 'Avaliada · ' + s.fmt(c.nota) + '/' + this.tarefa().pontos;
+        return s.entregaDe(this.aid, al) ? 'Entregue' : 'Não entregue';
+      },
+      corSituacao(al, chip) {
+        var sit = this.situacao(al);
+        if (sit.indexOf('Avaliada') === 0) return chip ? 'bg-emerald-100 text-emerald-800 dark:bg-emerald-400/15 dark:text-emerald-300' : 'text-emerald-700 dark:text-emerald-400';
+        if (sit === 'Entregue') return chip ? 'bg-ps-suave text-ps-texto dark:bg-ps-noite3 dark:text-ps-claro' : 'text-ps-texto dark:text-ps-claro font-semibold';
+        return chip ? 'bg-ps-fundo text-ps-cinza dark:bg-ps-noite3 dark:text-slate-400' : 'text-ps-cinza dark:text-slate-400';
+      },
+      contagem() {
+        var s = this.$store.ps, aid = this.aid, lista = this.alunos();
+        var ent = lista.filter(function (a) { return s.entregaDe(aid, a.id); }).length;
+        var av = lista.filter(function (a) { return s.correcao(aid, a.id); }).length;
+        return ent + ' de ' + lista.length + ' entregaram · ' + av + ' avaliadas';
+      },
+      proximoSemNota() {
+        var s = this.$store.ps, aid = this.aid, sel = this.sel;
+        var a = this.alunos().find(function (x) { return x.id !== sel && s.entregaDe(aid, x.id) && !s.correcao(aid, x.id); });
+        return a ? a.id : null;
+      },
+      carregar() {
+        var c = this.$store.ps.correcao(this.aid, this.sel);
+        this.nota = c ? c.nota : ''; this.feedback = c ? c.feedback : ''; this.erro = '';
+      },
+      selecionar(id) {
+        var self = this;
+        this.sel = id; this.carregar();
+        if (window.innerWidth < 1024) this.$nextTick(function () { self.$refs.detalhe.scrollIntoView({ behavior: 'smooth' }); });
+      },
+      atualizarUrl() { history.replaceState(null, '', 'corrigir.html?t=' + encodeURIComponent(this.tid) + '&id=' + encodeURIComponent(this.aid)); },
+      trocarTurma() {
+        this.aid = this.tarefas().length ? this.tarefas()[0].id : '';
+        this.$store.ps.turmaAtiva = this.tid;
+        this.sel = 'voce'; this.carregar(); this.atualizarUrl();
+      },
+      trocarTarefa() { this.sel = 'voce'; this.carregar(); this.atualizarUrl(); },
+      devolver() {
+        var max = this.tarefa().pontos;
+        var n = parseFloat(String(this.nota).replace(',', '.'));
+        if (isNaN(n) || n < 0 || n > max) { this.erro = 'Digite uma nota de 0 a ' + max + '.'; this.$refs.nota.focus(); return; }
+        this.erro = '';
+        this.$store.ps.devolver(this.aid, this.sel, Math.round(n * 10) / 10, this.feedback);
+      }
+    };
+  }
+</script>
+</body>
+</html>

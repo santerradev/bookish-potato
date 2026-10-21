@@ -1,0 +1,87 @@
+<!doctype html>
+<html lang="pt-BR" data-pagina="notificacoes">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Notificações | Sala PS</title>
+<link rel="icon" type="image/png" href="img/logo-ps.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<script src="https://cdn.tailwindcss.com"></script>
+<script src="js/tw.js"></script>
+<link rel="stylesheet" href="css/sala.css">
+<script defer src="https://cdn.jsdelivr.net/npm/@alpinejs/collapse@3.14.1/dist/cdn.min.js"></script>
+<script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.14.1/dist/cdn.min.js"></script>
+</head>
+
+<body x-data="pagina()" :class="$store.ps.menu && 'overflow-hidden lg:overflow-auto'" class="font-sans bg-ps-fundo text-ps-escuro dark:bg-ps-noite dark:text-slate-100 min-h-screen">
+
+<main id="conteudo" class="pt-16 lg:pl-72 min-h-screen">
+  <section class="px-4 sm:px-6 py-6 sm:py-8 max-w-3xl mx-auto" aria-labelledby="t-not">
+    <div class="flex flex-wrap items-center gap-3">
+      <h1 id="t-not" class="text-2xl sm:text-3xl font-extrabold mr-auto">Notificações</h1>
+      <button type="button" @click="$store.ps.marcarTodasLidas()" :disabled="!$store.ps.naoLidas()" class="h-11 px-4 rounded-full text-sm font-semibold border border-ps-linha dark:border-ps-noite3 inline-flex items-center gap-2 hover:bg-white dark:hover:bg-ps-noite2 disabled:opacity-40 disabled:cursor-not-allowed">
+        <span x-html="ic('check', '!w-4 !h-4')"></span>Marcar todas como lidas
+      </button>
+      <a href="configuracoes.html#notificacoes" class="h-11 w-11 rounded-full inline-flex items-center justify-center border border-ps-linha dark:border-ps-noite3 hover:bg-white dark:hover:bg-ps-noite2" aria-label="Configurar notificações" title="Configurar notificações" x-html="ic('engrenagem')"></a>
+    </div>
+
+    <div class="mt-5 flex gap-1 border-b border-ps-linha dark:border-ps-noite3" role="tablist" aria-label="Filtro">
+      <template x-for="a in [{id:'todas',n:'Todas'},{id:'naolidas',n:'Não lidas'}]" :key="a.id">
+        <button type="button" role="tab" @click="aba = a.id" :aria-selected="(aba === a.id).toString()"
+                class="h-12 px-4 text-sm font-semibold border-b-[3px] -mb-px focus:outline-none focus-visible:bg-ps-suave dark:focus-visible:bg-ps-noite3"
+                :class="aba === a.id ? 'border-ps-azul text-ps-texto dark:text-ps-claro' : 'border-transparent text-ps-cinza dark:text-slate-400 hover:text-ps-escuro dark:hover:text-white'">
+          <span x-text="a.n"></span><span x-show="a.id === 'naolidas' && $store.ps.naoLidas()" class="ml-1.5 inline-flex min-w-[22px] h-[22px] px-1.5 rounded-full bg-ps-azul text-ps-escuro text-xs font-bold items-center justify-center" x-text="$store.ps.naoLidas()"></span>
+        </button>
+      </template>
+    </div>
+
+    <ul class="mt-4 flex flex-col gap-2">
+      <template x-for="n in lista()" :key="n.id">
+        <li>
+          <a :href="n.link" @click="$store.ps.marcarLida(n.id)"
+             class="flex gap-4 p-4 rounded-2xl border transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-ps-azul"
+             :class="$store.ps.lidas[n.id] ? 'bg-transparent border-transparent hover:bg-white dark:hover:bg-ps-noite2' : 'bg-white dark:bg-ps-noite2 border-ps-linha dark:border-ps-noite3 hover:shadow-md'">
+            <span class="h-11 w-11 rounded-full inline-flex items-center justify-center shrink-0"
+                  :class="$store.ps.lidas[n.id] ? 'bg-ps-fundo text-ps-cinza dark:bg-ps-noite3 dark:text-slate-400' : 'bg-ps-suave text-ps-texto dark:bg-ps-noite3 dark:text-ps-claro'" x-html="ic(n.icone)"></span>
+            <span class="flex-1 min-w-0">
+              <span class="flex items-start gap-2">
+                <span class="flex-1 text-[15px]" :class="$store.ps.lidas[n.id] ? 'font-medium' : 'font-bold'" x-text="n.titulo"></span>
+                <span x-show="!$store.ps.lidas[n.id]" class="mt-2 h-2.5 w-2.5 rounded-full bg-ps-azul shrink-0" aria-label="Não lida"></span>
+              </span>
+              <span class="mt-1 block text-sm text-ps-cinza dark:text-slate-400 line-clamp-2" x-text="n.texto"></span>
+              <span x-show="n.data" class="mt-1 block text-xs text-ps-cinza dark:text-slate-400" x-text="n.data"></span>
+            </span>
+          </a>
+        </li>
+      </template>
+    </ul>
+
+    <template x-if="lista().length === 0">
+      <div class="text-center py-16">
+        <span class="text-ps-azul inline-flex" x-html="ic('sino', '!w-14 !h-14')"></span>
+        <p class="mt-4 font-semibold">Nenhuma notificação aqui.</p>
+        <p class="mt-1 text-sm text-ps-cinza dark:text-slate-400" x-text="aba === 'naolidas' ? 'Você já leu tudo.' : 'Ajuste o que quer receber em Configurações.'"></p>
+      </div>
+    </template>
+  </section>
+</main>
+
+<script src="js/dados.js"></script>
+<script src="js/app.js"></script>
+<script src="js/layout.js"></script>
+<script>
+  function pagina() {
+    return {
+      aba: 'todas',
+      init() { this.$store.ps.titulo = 'Notificações'; },
+      lista() {
+        var s = this.$store.ps, todas = s.notificacoes();
+        return this.aba === 'naolidas' ? todas.filter(function (n) { return !s.lidas[n.id]; }) : todas;
+      }
+    };
+  }
+</script>
+</body>
+</html>

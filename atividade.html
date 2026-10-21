@@ -1,0 +1,205 @@
+<!doctype html>
+<html lang="pt-BR" data-pagina="atividade">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Atividade | Sala PS</title>
+<link rel="icon" type="image/png" href="img/logo-ps.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<script src="https://cdn.tailwindcss.com"></script>
+<script src="js/tw.js"></script>
+<link rel="stylesheet" href="css/sala.css">
+<script defer src="https://cdn.jsdelivr.net/npm/@alpinejs/collapse@3.14.1/dist/cdn.min.js"></script>
+<script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.14.1/dist/cdn.min.js"></script>
+</head>
+
+<body x-data="pagina()" :class="$store.ps.menu && 'overflow-hidden lg:overflow-auto'" class="font-sans bg-ps-fundo text-ps-escuro dark:bg-ps-noite dark:text-slate-100 min-h-screen">
+
+<main id="conteudo" class="pt-16 lg:pl-72 min-h-screen">
+<template x-if="achado">
+  <div class="px-4 sm:px-6 py-6 sm:py-8 max-w-6xl mx-auto">
+    <a :href="'turma.html?t=' + achado.turma.id + '&aba=atividades'" class="inline-flex items-center gap-2 min-h-[44px] text-sm font-semibold text-ps-texto dark:text-ps-claro hover:underline">
+      <span x-html="ic('voltar', '!w-4 !h-4')"></span><span x-text="achado.turma.nome"></span>
+    </a>
+
+    <div class="mt-4 grid gap-6 lg:grid-cols-[minmax(0,1fr)_340px] items-start">
+
+      <!-- ================= Enunciado ================= -->
+      <article class="min-w-0">
+        <div class="flex gap-4">
+          <span class="h-12 w-12 rounded-full inline-flex items-center justify-center shrink-0" :class="$store.ps.corTipo('tarefa')" x-html="ic('tarefa')"></span>
+          <div class="min-w-0 flex-1">
+            <h1 class="text-2xl sm:text-3xl font-extrabold leading-tight" x-text="item.titulo"></h1>
+            <p class="mt-2 text-sm text-ps-cinza dark:text-slate-400">
+              <span x-text="achado.turma.instrutor"></span> · <span x-text="achado.topico.nome"></span>
+            </p>
+            <div class="mt-3 flex flex-wrap gap-x-6 gap-y-1 text-sm font-semibold">
+              <span x-text="item.pontos + ' pontos'"></span>
+              <span class="inline-flex items-center gap-1.5 text-ps-cinza dark:text-slate-300"><span x-html="ic('relogio', '!w-4 !h-4')"></span><span x-text="'Prazo: ' + $store.ps.textoPrazo(item)"></span></span>
+            </div>
+          </div>
+        </div>
+
+        <div class="mt-6 border-t-2 pt-6" :style="'border-color:' + achado.turma.cor">
+          <p class="text-[15px] leading-8 whitespace-pre-line" x-text="item.descricao"></p>
+          <div class="mt-6 grid sm:grid-cols-2 gap-3">
+            <div class="flex items-center gap-3 rounded-xl border border-ps-linha dark:border-ps-noite3 bg-white dark:bg-ps-noite2 p-3">
+              <span class="h-12 w-12 rounded-lg bg-ps-suave dark:bg-ps-noite3 text-ps-texto dark:text-ps-claro inline-flex items-center justify-center shrink-0" x-html="ic('arquivo')"></span>
+              <span class="min-w-0">
+                <span class="block text-sm font-semibold truncate">Material de apoio</span>
+                <span class="block text-xs text-ps-cinza dark:text-slate-400">[link do material]</span>
+              </span>
+            </div>
+          </div>
+        </div>
+
+      </article>
+
+      <!-- ================= Seu trabalho (trainee) ================= -->
+      <aside x-show="!$store.ps.instrutor()" class="lg:col-start-2 lg:row-start-1 lg:row-span-2 lg:self-start lg:sticky lg:top-24 rounded-2xl border border-ps-linha dark:border-ps-noite3 bg-white dark:bg-ps-noite2 p-5 shadow-sm" aria-labelledby="t-trab">
+        <div class="flex items-center justify-between gap-3">
+          <h2 id="t-trab" class="text-lg font-bold">Seu trabalho</h2>
+          <span class="text-sm font-semibold"
+                :class="{ 'text-emerald-700 dark:text-emerald-400': $store.ps.status(item) !== 'Atribuída', 'text-ps-cinza dark:text-slate-400': $store.ps.status(item) === 'Atribuída' }"
+                x-text="$store.ps.status(item)"></span>
+        </div>
+
+        <!-- Nota -->
+        <template x-if="$store.ps.correcao(item.id)">
+          <div class="mt-4 rounded-xl bg-ps-suave dark:bg-ps-noite3 p-4">
+            <p class="text-sm text-ps-cinza dark:text-slate-300">Nota</p>
+            <p class="text-3xl font-extrabold"><span x-text="$store.ps.fmt($store.ps.correcao(item.id).nota)"></span><span class="text-lg text-ps-cinza dark:text-slate-400" x-text="'/' + item.pontos"></span></p>
+            <template x-if="$store.ps.correcao(item.id).feedback">
+              <p class="mt-3 text-sm leading-6 whitespace-pre-line" x-text="$store.ps.correcao(item.id).feedback"></p>
+            </template>
+          </div>
+        </template>
+
+        <!-- Anexos -->
+        <ul class="mt-4 flex flex-col gap-2">
+          <template x-for="(a, i) in anexos()" :key="i">
+            <li class="flex items-center gap-3 rounded-xl border border-ps-linha dark:border-ps-noite3 p-3">
+              <span class="text-ps-texto dark:text-ps-claro" x-html="ic(a.tipo === 'link' ? 'link' : 'arquivo')"></span>
+              <span class="flex-1 min-w-0 text-sm truncate" x-text="a.nome"></span>
+              <button x-show="!entregue()" type="button" @click="$store.ps.removerAnexo(item.id, i)" class="h-9 w-9 rounded-full inline-flex items-center justify-center text-ps-cinza hover:bg-ps-fundo dark:hover:bg-ps-noite3" :aria-label="'Remover ' + a.nome" x-html="ic('x', '!w-4 !h-4')"></button>
+            </li>
+          </template>
+        </ul>
+
+        <template x-if="!entregue()">
+          <div class="mt-3 flex flex-col gap-3">
+            <div x-show="linkAberto" x-cloak class="flex gap-2">
+              <label for="link" class="sr-only">Endereço do link</label>
+              <input id="link" x-ref="link" type="url" x-model="link" @keydown.enter.prevent="addLink()" placeholder="https://" class="flex-1 min-w-0 h-11 rounded-xl border border-ps-linha dark:border-ps-noite3 bg-transparent px-3 text-sm focus:outline-none focus:ring-2 focus:ring-ps-azul">
+              <button type="button" @click="addLink()" :disabled="!link.trim()" class="h-11 px-4 rounded-xl text-sm font-bold bg-ps-azul text-ps-escuro disabled:opacity-40">Adicionar</button>
+            </div>
+            <div class="grid grid-cols-2 gap-2">
+              <button type="button" @click="linkAberto = !linkAberto; $nextTick(() => $refs.link && $refs.link.focus())" class="h-11 rounded-full text-sm font-semibold border border-ps-linha dark:border-ps-noite3 inline-flex items-center justify-center gap-2 hover:bg-ps-fundo dark:hover:bg-ps-noite3">
+                <span x-html="ic('link', '!w-4 !h-4')"></span>Link
+              </button>
+              <label class="h-11 rounded-full text-sm font-semibold border border-ps-linha dark:border-ps-noite3 inline-flex items-center justify-center gap-2 hover:bg-ps-fundo dark:hover:bg-ps-noite3 cursor-pointer focus-within:ring-2 focus-within:ring-ps-azul">
+                <span x-html="ic('clipe', '!w-4 !h-4')"></span>Arquivo
+                <input type="file" multiple class="sr-only" @change="addArquivos($event)">
+              </label>
+            </div>
+            <button type="button" @click="$store.ps.entregar(item.id)" class="h-12 rounded-full text-[15px] font-bold bg-ps-azul text-ps-escuro hover:brightness-105" x-text="anexos().length ? 'Entregar' : 'Marcar como concluída'"></button>
+            <p class="text-xs text-ps-cinza dark:text-slate-400">Na demo, só o nome do arquivo fica salvo. Nada é enviado.</p>
+          </div>
+        </template>
+
+        <template x-if="entregue()">
+          <div class="mt-4">
+            <p class="text-xs text-ps-cinza dark:text-slate-400" x-text="'Entregue em ' + $store.ps.entregas[item.id].data"></p>
+            <button x-show="!$store.ps.correcao(item.id)" type="button" @click="$store.ps.cancelarEntrega(item.id)" class="mt-3 w-full h-11 rounded-full text-sm font-semibold border border-ps-linha dark:border-ps-noite3 hover:bg-ps-fundo dark:hover:bg-ps-noite3">Cancelar entrega</button>
+          </div>
+        </template>
+      </aside>
+
+      <!-- ================= Resumo (instrutor) ================= -->
+      <aside x-show="$store.ps.instrutor()" x-cloak class="lg:col-start-2 lg:row-start-1 lg:row-span-2 lg:self-start lg:sticky lg:top-24 rounded-2xl border border-ps-linha dark:border-ps-noite3 bg-white dark:bg-ps-noite2 p-5 shadow-sm">
+        <h2 class="text-lg font-bold">Entregas</h2>
+        <dl class="mt-4 grid grid-cols-3 gap-2 text-center">
+          <div class="rounded-xl bg-ps-suave dark:bg-ps-noite3 p-3"><dt class="text-xs text-ps-cinza dark:text-slate-400">Entregues</dt><dd class="text-2xl font-extrabold" x-text="contagem().entregues"></dd></div>
+          <div class="rounded-xl bg-ps-suave dark:bg-ps-noite3 p-3"><dt class="text-xs text-ps-cinza dark:text-slate-400">Avaliadas</dt><dd class="text-2xl font-extrabold" x-text="contagem().avaliadas"></dd></div>
+          <div class="rounded-xl bg-ps-suave dark:bg-ps-noite3 p-3"><dt class="text-xs text-ps-cinza dark:text-slate-400">Faltam</dt><dd class="text-2xl font-extrabold" x-text="contagem().faltam"></dd></div>
+        </dl>
+        <a :href="'corrigir.html?t=' + achado.turma.id + '&id=' + item.id" class="mt-5 h-12 rounded-full text-[15px] font-bold bg-ps-azul text-ps-escuro inline-flex w-full items-center justify-center gap-2 hover:brightness-105"><span x-html="ic('corrigir', '!w-4 !h-4')"></span>Abrir correção</a>
+        <a :href="'entregas.html?t=' + achado.turma.id + '&id=' + item.id" class="mt-2 h-11 rounded-full text-sm font-semibold border border-ps-linha dark:border-ps-noite3 inline-flex w-full items-center justify-center hover:bg-ps-fundo dark:hover:bg-ps-noite3">Ver lista de entregas</a>
+        <p class="mt-3 text-xs text-ps-cinza dark:text-slate-400">Inclui trainees de exemplo para mostrar a tela.</p>
+      </aside>
+
+      <!-- Comentários particulares (no celular, abaixo de "Seu trabalho") -->
+      <section class="lg:col-start-1 min-w-0 rounded-2xl border border-ps-linha dark:border-ps-noite3 bg-white dark:bg-ps-noite2 p-5" aria-labelledby="t-priv">
+        <h2 id="t-priv" class="flex items-center gap-2 font-semibold"><span x-html="ic('mensagem', '!w-5 !h-5')"></span>Comentários particulares</h2>
+        <p class="mt-1 text-sm text-ps-cinza dark:text-slate-400" x-text="$store.ps.instrutor() ? 'Para responder um trainee, use a tela de correção.' : 'Só você e o instrutor veem esta conversa.'"></p>
+        <template x-for="(c, i) in $store.ps.conversa(item.id, 'voce')" :key="i">
+          <div class="mt-4 flex gap-3">
+            <span class="h-8 w-8 rounded-full text-xs font-bold inline-flex items-center justify-center shrink-0"
+                  :class="c.instrutor ? 'bg-ps-escuro text-white dark:bg-ps-claro dark:text-ps-escuro' : 'bg-ps-azul text-ps-escuro'" x-text="$store.ps.iniciais(c.autor)"></span>
+            <div class="min-w-0">
+              <p class="text-sm"><span class="font-semibold" x-text="c.autor"></span> <span class="text-xs text-ps-cinza dark:text-slate-400" x-text="c.data"></span></p>
+              <p class="text-sm break-words" x-text="c.texto"></p>
+            </div>
+          </div>
+        </template>
+        <form x-show="!$store.ps.instrutor()" @submit.prevent="$store.ps.comentarPrivado(item.id, 'voce', priv); priv = ''" class="mt-4 flex items-center gap-2">
+          <label for="priv" class="sr-only">Comentário particular</label>
+          <input id="priv" type="text" x-model="priv" placeholder="Escreva para o instrutor" class="flex-1 min-w-0 h-11 rounded-full border border-ps-linha dark:border-ps-noite3 bg-transparent px-4 text-sm focus:outline-none focus:ring-2 focus:ring-ps-azul">
+          <button type="submit" :disabled="!priv.trim()" class="h-11 w-11 rounded-full inline-flex items-center justify-center text-ps-texto dark:text-ps-claro hover:bg-ps-fundo dark:hover:bg-ps-noite3 disabled:opacity-30" aria-label="Enviar comentário particular" x-html="ic('enviar')"></button>
+        </form>
+      </section>
+    </div>
+  </div>
+</template>
+</main>
+
+<script src="js/dados.js"></script>
+<script src="js/app.js"></script>
+<script src="js/layout.js"></script>
+<script>
+  function pagina() {
+    return {
+      id: param('id'), link: '', linkAberto: false, priv: '',
+      get achado() { return this.$store.ps.achar(this.id); },
+      get item() { return this.achado ? this.achado.item : null; },
+      init() {
+        var a = this.achado;
+        if (!a) { location.replace('404.html'); return; }
+        if (a.item.tipo !== 'tarefa') { location.replace(this.$store.ps.urlItem(a.turma.id, a.item)); return; }
+        this.$store.ps.turmaAtiva = a.turma.id;
+        this.$store.ps.titulo = a.turma.nome;
+        document.title = a.item.titulo + ' | Sala PS';
+      },
+      entregue() { return !!this.$store.ps.entregas[this.id]; },
+      anexos() {
+        var s = this.$store.ps;
+        return this.entregue() ? (s.entregas[this.id].anexos || []) : (s.rascunhos[this.id] || []);
+      },
+      addLink() {
+        var url = this.link.trim();
+        if (!url) return;
+        if (!/^https?:\/\//i.test(url)) url = 'https://' + url;
+        this.$store.ps.anexar(this.id, { tipo: 'link', nome: url });
+        this.link = ''; this.linkAberto = false;
+      },
+      addArquivos(ev) {
+        var self = this;
+        Array.prototype.forEach.call(ev.target.files || [], function (f) {
+          self.$store.ps.anexar(self.id, { tipo: 'arquivo', nome: f.name });
+        });
+        ev.target.value = '';
+      },
+      contagem() {
+        var s = this.$store.ps, id = this.id;
+        var alunos = ['voce'].concat(ALUNOS_EXEMPLO.map(function (a) { return a.id; }));
+        var ent = alunos.filter(function (al) { return s.entregaDe(id, al); }).length;
+        var av = alunos.filter(function (al) { return s.correcao(id, al); }).length;
+        return { entregues: ent, avaliadas: av, faltam: alunos.length - ent };
+      }
+    };
+  }
+</script>
+</body>
+</html>

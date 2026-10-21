@@ -1,0 +1,145 @@
+<!doctype html>
+<html lang="pt-BR" data-pagina="admin-trilhas" data-papel="admin">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Trilhas | Sala PS</title>
+<link rel="icon" type="image/png" href="img/logo-ps.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<script src="https://cdn.tailwindcss.com"></script>
+<script src="js/tw.js"></script>
+<link rel="stylesheet" href="css/sala.css">
+<script defer src="https://cdn.jsdelivr.net/npm/@alpinejs/collapse@3.14.1/dist/cdn.min.js"></script>
+<script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.14.1/dist/cdn.min.js"></script>
+</head>
+
+<body x-data="pagina()" :class="$store.ps.menu && 'overflow-hidden lg:overflow-auto'" class="font-sans bg-ps-fundo text-ps-escuro dark:bg-ps-noite dark:text-slate-100 min-h-screen">
+
+<main id="conteudo" class="pt-16 lg:pl-72 min-h-screen">
+  <div class="px-4 sm:px-6 py-6 sm:py-8 max-w-5xl mx-auto">
+    <p class="text-xs font-bold tracking-[1.5px] text-ps-texto dark:text-ps-claro">ADMINISTRAÇÃO</p>
+    <div class="mt-1 flex flex-wrap items-center gap-3">
+      <div class="mr-auto">
+        <h1 class="text-2xl sm:text-3xl font-extrabold">Trilhas</h1>
+        <p class="mt-1 text-[15px] text-ps-cinza dark:text-slate-400">Sequências de turmas que o trainee percorre em ordem.</p>
+      </div>
+      <button type="button" @click="nova()" class="h-11 px-5 rounded-full text-sm font-bold bg-ps-azul text-ps-escuro inline-flex items-center gap-2 hover:brightness-105"><span x-html="ic('mais', '!w-4 !h-4')"></span>Nova trilha</button>
+    </div>
+
+    <div class="mt-6 flex flex-col gap-5">
+      <template x-for="(tr, ti) in $store.ps.trilhas" :key="tr.id">
+        <article class="rounded-2xl bg-white dark:bg-ps-noite2 border border-ps-linha dark:border-ps-noite3 p-5 sm:p-6">
+          <!-- Visualização -->
+          <div x-show="editando !== tr.id">
+            <div class="flex flex-wrap items-start gap-3">
+              <span class="h-11 w-11 rounded-xl bg-ps-suave dark:bg-ps-noite3 text-ps-texto dark:text-ps-claro inline-flex items-center justify-center shrink-0" x-html="ic('camadas')"></span>
+              <div class="flex-1 min-w-[200px]">
+                <h2 class="text-lg font-bold" x-text="tr.nome"></h2>
+                <p class="text-sm text-ps-cinza dark:text-slate-400" x-text="tr.descricao || 'Sem descrição.'"></p>
+              </div>
+              <div class="flex gap-1">
+                <button type="button" @click="editar(tr)" class="h-10 px-4 rounded-full text-sm font-semibold border border-ps-linha dark:border-ps-noite3 inline-flex items-center gap-2 hover:bg-ps-fundo dark:hover:bg-ps-noite3"><span x-html="ic('editar', '!w-4 !h-4')"></span>Editar</button>
+                <button type="button" @click="excluir(ti)" class="h-10 w-10 rounded-full inline-flex items-center justify-center text-red-700 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-400/10" :aria-label="'Excluir ' + tr.nome" x-html="ic('lixo', '!w-4 !h-4')"></button>
+              </div>
+            </div>
+            <ol class="mt-5 flex flex-col sm:flex-row sm:flex-wrap gap-2">
+              <template x-for="(id, i) in tr.turmas" :key="id">
+                <li class="flex items-center gap-2" x-show="$store.ps.turma(id)">
+                  <a :href="'turma.html?t=' + id" class="flex items-center gap-2 rounded-full border border-ps-linha dark:border-ps-noite3 pl-1.5 pr-4 py-1.5 hover:border-ps-azul">
+                    <span class="h-7 w-7 rounded-full text-white text-xs font-bold inline-flex items-center justify-center" :style="'background:' + ($store.ps.turma(id) || {}).cor" x-text="i + 1"></span>
+                    <span class="text-sm font-semibold" x-text="($store.ps.turma(id) || {}).nome"></span>
+                  </a>
+                  <span x-show="i < tr.turmas.length - 1" class="hidden sm:inline text-ps-cinza" x-html="ic('direita', '!w-4 !h-4')"></span>
+                </li>
+              </template>
+            </ol>
+            <div class="mt-5 flex items-center gap-3">
+              <div class="flex-1 h-2 rounded-full bg-ps-fundo dark:bg-ps-noite3 overflow-hidden" role="progressbar" :aria-valuenow="$store.ps.progressoTrilha(tr)" aria-valuemin="0" aria-valuemax="100" :aria-label="'Seu progresso na ' + tr.nome">
+                <div class="h-full rounded-full bg-ps-azul" :style="'width:' + $store.ps.progressoTrilha(tr) + '%'"></div>
+              </div>
+              <span class="text-xs text-ps-cinza dark:text-slate-400" x-text="'Seu progresso (demo): ' + $store.ps.progressoTrilha(tr) + '%'"></span>
+            </div>
+          </div>
+
+          <!-- Edição -->
+          <form x-show="editando === tr.id" x-cloak @submit.prevent="salvar(ti)" class="flex flex-col gap-4">
+            <div>
+              <label :for="'nome-' + tr.id" class="text-sm font-semibold">Nome da trilha</label>
+              <input :id="'nome-' + tr.id" x-model="f.nome" type="text" class="mt-2 w-full h-12 rounded-xl border border-ps-linha dark:border-ps-noite3 bg-transparent px-4 focus:outline-none focus:ring-2 focus:ring-ps-azul">
+            </div>
+            <div>
+              <label :for="'desc-' + tr.id" class="text-sm font-semibold">Descrição</label>
+              <input :id="'desc-' + tr.id" x-model="f.descricao" type="text" class="mt-2 w-full h-12 rounded-xl border border-ps-linha dark:border-ps-noite3 bg-transparent px-4 focus:outline-none focus:ring-2 focus:ring-ps-azul">
+            </div>
+            <div>
+              <p class="text-sm font-semibold">Turmas, na ordem</p>
+              <ol class="mt-2 flex flex-col gap-2">
+                <template x-for="(id, i) in f.turmas" :key="id">
+                  <li class="flex items-center gap-2 rounded-xl border border-ps-linha dark:border-ps-noite3 p-2 pl-3">
+                    <span class="text-sm font-bold w-5 text-ps-cinza" x-text="i + 1"></span>
+                    <span class="flex-1 text-sm font-semibold truncate" x-text="($store.ps.turma(id) || {}).nome"></span>
+                    <button type="button" @click="moverT(i, -1)" :disabled="i === 0" class="h-9 w-9 rounded-full inline-flex items-center justify-center hover:bg-ps-fundo dark:hover:bg-ps-noite3 disabled:opacity-30" aria-label="Subir" x-html="ic('cima', '!w-4 !h-4')"></button>
+                    <button type="button" @click="moverT(i, 1)" :disabled="i === f.turmas.length - 1" class="h-9 w-9 rounded-full inline-flex items-center justify-center hover:bg-ps-fundo dark:hover:bg-ps-noite3 disabled:opacity-30" aria-label="Descer" x-html="ic('baixo', '!w-4 !h-4')"></button>
+                    <button type="button" @click="f.turmas.splice(i, 1)" class="h-9 w-9 rounded-full inline-flex items-center justify-center text-ps-cinza hover:bg-ps-fundo dark:hover:bg-ps-noite3" aria-label="Tirar da trilha" x-html="ic('x', '!w-4 !h-4')"></button>
+                  </li>
+                </template>
+              </ol>
+              <label class="mt-3 flex items-center gap-2 text-sm">
+                <span class="text-ps-cinza dark:text-slate-400 shrink-0">Adicionar</span>
+                <select @change="if ($event.target.value) { f.turmas.push($event.target.value); $event.target.value = ''; }" class="h-10 flex-1 min-w-0 rounded-lg border border-ps-linha dark:border-ps-noite3 bg-white dark:bg-ps-noite2 px-3 text-sm">
+                  <option value="">Escolha uma turma</option>
+                  <template x-for="t in $store.ps.turmas().filter(x => f.turmas.indexOf(x.id) < 0)" :key="t.id"><option :value="t.id" x-text="t.nome"></option></template>
+                </select>
+              </label>
+            </div>
+            <div class="flex gap-2">
+              <button type="submit" :disabled="!f.nome.trim()" class="h-11 px-6 rounded-full text-sm font-bold bg-ps-azul text-ps-escuro disabled:opacity-40">Salvar</button>
+              <button type="button" @click="cancelar(ti)" class="h-11 px-5 rounded-full text-sm font-semibold hover:bg-ps-fundo dark:hover:bg-ps-noite3">Cancelar</button>
+            </div>
+          </form>
+        </article>
+      </template>
+      <p x-show="$store.ps.trilhas.length === 0" class="py-10 text-center text-sm text-ps-cinza dark:text-slate-400">Nenhuma trilha. Crie a primeira.</p>
+    </div>
+  </div>
+</main>
+
+<script src="js/dados.js"></script>
+<script src="js/app.js"></script>
+<script src="js/layout.js"></script>
+<script>
+  function pagina() {
+    return {
+      editando: null, nova_: false, f: { nome: '', descricao: '', turmas: [] },
+      init() { this.$store.ps.titulo = 'Trilhas'; },
+      editar(tr) { this.editando = tr.id; this.f = { nome: tr.nome, descricao: tr.descricao, turmas: tr.turmas.slice() }; },
+      nova() {
+        var id = 'trilha-' + Date.now();
+        this.$store.ps.trilhas.push({ id: id, nome: 'Nova trilha', descricao: '', turmas: [] });
+        this.nova_ = true;
+        this.editar(this.$store.ps.trilhas[this.$store.ps.trilhas.length - 1]);
+        this.$nextTick(function () { var el = document.getElementById('nome-' + id); if (el) { el.focus(); el.select(); } });
+      },
+      moverT(i, d) { var l = this.f.turmas.slice(), x = l[i]; l[i] = l[i + d]; l[i + d] = x; this.f.turmas = l; },
+      salvar(ti) {
+        var tr = this.$store.ps.trilhas[ti];
+        tr.nome = this.f.nome.trim(); tr.descricao = this.f.descricao.trim(); tr.turmas = this.f.turmas.slice();
+        this.editando = null; this.nova_ = false;
+        this.$store.ps.avisar('Trilha salva.');
+      },
+      cancelar(ti) {
+        if (this.nova_) this.$store.ps.trilhas.splice(ti, 1);
+        this.editando = null; this.nova_ = false;
+      },
+      excluir(ti) {
+        if (!confirm('Excluir a trilha "' + this.$store.ps.trilhas[ti].nome + '"? As turmas não são apagadas.')) return;
+        this.$store.ps.trilhas.splice(ti, 1);
+        this.$store.ps.avisar('Trilha excluída.');
+      }
+    };
+  }
+</script>
+</body>
+</html>

@@ -1,0 +1,131 @@
+<!doctype html>
+<html lang="pt-BR" data-pagina="livro-notas" data-papel="instrutor">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Livro de notas | Sala PS</title>
+<link rel="icon" type="image/png" href="img/logo-ps.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<script src="https://cdn.tailwindcss.com"></script>
+<script src="js/tw.js"></script>
+<link rel="stylesheet" href="css/sala.css">
+<script defer src="https://cdn.jsdelivr.net/npm/@alpinejs/collapse@3.14.1/dist/cdn.min.js"></script>
+<script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.14.1/dist/cdn.min.js"></script>
+</head>
+
+<body x-data="pagina()" :class="$store.ps.menu && 'overflow-hidden lg:overflow-auto'" class="font-sans bg-ps-fundo text-ps-escuro dark:bg-ps-noite dark:text-slate-100 min-h-screen">
+
+<main id="conteudo" class="pt-16 lg:pl-72 min-h-screen">
+  <div class="px-4 sm:px-6 py-6 sm:py-8 max-w-7xl mx-auto">
+    <div class="flex flex-wrap items-end gap-3">
+      <div class="mr-auto">
+        <h1 class="text-2xl sm:text-3xl font-extrabold">Livro de notas</h1>
+        <p class="mt-1 text-[15px] text-ps-cinza dark:text-slate-400">Todas as notas da turma numa tabela.</p>
+      </div>
+      <label class="flex items-center gap-2 text-sm"><span class="text-ps-cinza dark:text-slate-400">Turma</span>
+        <select x-model="tid" @change="$store.ps.turmaAtiva = tid; history.replaceState(null, '', 'livro-notas.html?t=' + tid)" class="h-11 rounded-lg border border-ps-linha dark:border-ps-noite3 bg-white dark:bg-ps-noite2 px-3 text-sm">
+          <template x-for="t in turmasComNota()" :key="t.id"><option :value="t.id" x-text="t.nome" :selected="t.id === tid"></option></template>
+        </select>
+      </label>
+      <button type="button" @click="exportar()" class="h-11 px-5 rounded-full text-sm font-semibold border border-ps-linha dark:border-ps-noite3 bg-white dark:bg-ps-noite2 inline-flex items-center gap-2 hover:border-ps-azul"><span x-html="ic('download', '!w-4 !h-4')"></span>Exportar CSV</button>
+    </div>
+
+    <div class="mt-6 rounded-2xl bg-white dark:bg-ps-noite2 border border-ps-linha dark:border-ps-noite3 overflow-x-auto">
+      <table class="min-w-full text-sm border-separate border-spacing-0">
+        <caption class="sr-only" x-text="'Notas da turma ' + (($store.ps.turma(tid) || {}).nome || '')"></caption>
+        <thead>
+          <tr>
+            <th scope="col" class="sticky left-0 z-10 bg-white dark:bg-ps-noite2 text-left px-5 py-3 border-b border-r border-ps-linha dark:border-ps-noite3 min-w-[200px] font-semibold">Trainee</th>
+            <template x-for="it in colunas()" :key="it.id">
+              <th scope="col" class="px-3 py-3 border-b border-ps-linha dark:border-ps-noite3 text-left align-bottom min-w-[130px]">
+                <a :href="it.tipo === 'tarefa' ? 'entregas.html?t=' + tid + '&id=' + it.id : $store.ps.urlItem(tid, it)" class="block font-semibold leading-snug hover:underline line-clamp-2" :title="it.titulo" x-text="it.titulo"></a>
+                <span class="mt-1 block text-xs font-normal text-ps-cinza dark:text-slate-400" x-text="$store.ps.rotulo(it.tipo) + ' · ' + it.pontos + ' pts'"></span>
+              </th>
+            </template>
+            <th scope="col" class="px-5 py-3 border-b border-l border-ps-linha dark:border-ps-noite3 text-right font-semibold min-w-[120px]">Aproveitamento</th>
+          </tr>
+        </thead>
+        <tbody>
+          <template x-for="a in $store.ps.alunosDe()" :key="a.id">
+            <tr class="group">
+              <th scope="row" class="sticky left-0 z-10 bg-white dark:bg-ps-noite2 group-hover:bg-ps-suave dark:group-hover:bg-ps-noite3 text-left px-5 py-3 border-b border-r border-ps-linha dark:border-ps-noite3 font-semibold">
+                <span class="flex items-center gap-3">
+                  <span class="h-8 w-8 rounded-full text-xs font-bold inline-flex items-center justify-center shrink-0" :class="a.id === 'voce' ? 'bg-ps-azul text-ps-escuro' : 'border-2 border-dashed border-ps-linha dark:border-ps-noite3 text-ps-cinza'" x-text="$store.ps.iniciais(a.nome)"></span>
+                  <span class="truncate" x-text="a.id === 'voce' ? a.nome + ' (demo)' : a.nome"></span>
+                </span>
+              </th>
+              <template x-for="it in colunas()" :key="it.id">
+                <td class="px-3 py-3 border-b border-ps-linha dark:border-ps-noite3 group-hover:bg-ps-suave/60 dark:group-hover:bg-ps-noite3/60 tabular-nums">
+                  <template x-if="celula(a.id, it).link">
+                    <a :href="celula(a.id, it).link" class="inline-flex items-center h-8 px-2.5 rounded-lg font-semibold" :class="celula(a.id, it).cls" x-text="celula(a.id, it).txt"></a>
+                  </template>
+                  <template x-if="!celula(a.id, it).link"><span :class="celula(a.id, it).cls" x-text="celula(a.id, it).txt"></span></template>
+                </td>
+              </template>
+              <td class="px-5 py-3 border-b border-l border-ps-linha dark:border-ps-noite3 text-right font-extrabold tabular-nums group-hover:bg-ps-suave/60 dark:group-hover:bg-ps-noite3/60" x-text="aprov(a.id)"></td>
+            </tr>
+          </template>
+        </tbody>
+      </table>
+    </div>
+
+    <div class="mt-4 flex flex-wrap gap-x-6 gap-y-2 text-xs text-ps-cinza dark:text-slate-400">
+      <span class="inline-flex items-center gap-2"><span class="inline-flex h-6 px-2 rounded-md items-center bg-ps-azul text-ps-escuro font-bold">Corrigir</span>entregue, sem nota</span>
+      <span>8,5 = nota dada</span>
+      <span>- = não entregue ou sem dados</span>
+      <span>Os quizzes dos trainees de exemplo não têm dados.</span>
+    </div>
+  </div>
+</main>
+
+<script src="js/dados.js"></script>
+<script src="js/app.js"></script>
+<script src="js/layout.js"></script>
+<script>
+  function pagina() {
+    return {
+      tid: param('t') || '',
+      init() {
+        this.$store.ps.titulo = 'Livro de notas';
+        var self = this, ts = this.turmasComNota();
+        if (!ts.some(function (t) { return t.id === self.tid; })) this.tid = ts.length ? ts[0].id : '';
+        this.$store.ps.turmaAtiva = this.tid;
+      },
+      turmasComNota() { var s = this.$store.ps; return s.turmas().filter(function (t) { return s.itens(t).some(function (i) { return i.tipo !== 'material'; }); }); },
+      colunas() { return this.$store.ps.itens(this.$store.ps.turma(this.tid)).filter(function (i) { return i.tipo !== 'material'; }); },
+      nota(al, it) {
+        var s = this.$store.ps;
+        if (it.tipo === 'quiz') return al === 'voce' ? s.nota(it) : null;
+        var c = s.correcao(it.id, al); return c ? c.nota : null;
+      },
+      celula(al, it) {
+        var s = this.$store.ps, n = this.nota(al, it);
+        if (n !== null) return { txt: s.fmt(n), cls: 'font-bold', link: it.tipo === 'tarefa' ? 'corrigir.html?t=' + this.tid + '&id=' + it.id + '&a=' + al : '' };
+        if (it.tipo === 'tarefa' && s.entregaDe(it.id, al)) return { txt: 'Corrigir', cls: 'bg-ps-azul text-ps-escuro text-xs', link: 'corrigir.html?t=' + this.tid + '&id=' + it.id + '&a=' + al };
+        return { txt: '-', cls: 'text-ps-cinza dark:text-slate-500', link: '' };
+      },
+      aprov(al) {
+        var self = this, pts = 0, max = 0;
+        this.colunas().forEach(function (it) { var n = self.nota(al, it); if (n !== null) { pts += n; max += it.pontos; } });
+        return max ? Math.round(pts * 100 / max) + '%' : '-';
+      },
+      exportar() {
+        var self = this, cols = this.colunas();
+        var linhas = [['Trainee'].concat(cols.map(function (c) { return c.titulo + ' (' + c.pontos + ')'; })).concat(['Aproveitamento'])];
+        this.$store.ps.alunosDe().forEach(function (a) {
+          linhas.push([a.nome].concat(cols.map(function (c) { var n = self.nota(a.id, c); return n === null ? '' : self.$store.ps.fmt(n); })).concat([self.aprov(a.id)]));
+        });
+        var csv = linhas.map(function (l) { return l.map(function (v) { return '"' + String(v).replace(/"/g, '""') + '"'; }).join(';'); }).join('\n');
+        var blob = new Blob(['﻿' + csv], { type: 'text/csv;charset=utf-8' });
+        var a = document.createElement('a');
+        a.href = URL.createObjectURL(blob); a.download = 'notas-' + this.tid + '.csv';
+        document.body.appendChild(a); a.click(); a.remove();
+        this.$store.ps.avisar('Planilha baixada.');
+      }
+    };
+  }
+</script>
+</body>
+</html>

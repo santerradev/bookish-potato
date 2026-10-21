@@ -1,0 +1,118 @@
+<!doctype html>
+<html lang="pt-BR" data-pagina="cadastro">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Criar conta | Sala PS</title>
+<link rel="icon" type="image/png" href="img/logo-ps.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<script src="https://cdn.tailwindcss.com"></script>
+<script src="js/tw.js"></script>
+<link rel="stylesheet" href="css/sala.css">
+<script defer src="https://cdn.jsdelivr.net/npm/@alpinejs/collapse@3.14.1/dist/cdn.min.js"></script>
+<script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.14.1/dist/cdn.min.js"></script>
+</head>
+
+<body x-data="cadastro()" class="font-sans bg-ps-fundo text-ps-escuro dark:bg-ps-noite dark:text-slate-100 min-h-screen">
+
+<header class="h-16 px-4 sm:px-6 flex items-center justify-between">
+  <a href="login.html" class="flex items-center gap-2.5 rounded-lg focus:outline-none focus-visible:ring-2 focus-visible:ring-ps-azul">
+    <img src="img/logo-ps.png" alt="" width="133" height="180" class="h-7 w-auto">
+    <span class="font-extrabold text-lg tracking-tight">Sala <span class="text-ps-texto dark:text-ps-claro">PS</span></span>
+  </a>
+  <button type="button" @click="$store.ps.alternarTema()" class="h-11 w-11 rounded-full inline-flex items-center justify-center hover:bg-white dark:hover:bg-ps-noite2" :aria-label="$store.ps.escuro ? 'Ativar modo claro' : 'Ativar modo escuro'">
+    <span x-show="$store.ps.escuro" x-cloak x-html="ic('sol')"></span><span x-show="!$store.ps.escuro" x-html="ic('lua')"></span>
+  </button>
+</header>
+
+<main id="conteudo" class="px-4 sm:px-6 pb-12 pt-4 flex justify-center">
+  <div class="w-full max-w-lg rounded-3xl bg-white dark:bg-ps-noite2 border border-ps-linha dark:border-ps-noite3 p-6 sm:p-10">
+    <h1 class="text-3xl font-extrabold">Criar conta</h1>
+    <p class="mt-2 text-[15px] text-ps-cinza dark:text-slate-400">Para trainees e membros da PS Júnior.</p>
+
+    <form class="mt-8 flex flex-col gap-5" @submit.prevent="enviar()" novalidate>
+      <div>
+        <label for="nome" class="text-sm font-semibold">Nome completo</label>
+        <input id="nome" type="text" x-model="f.nome" autocomplete="name" class="mt-2 w-full h-12 rounded-xl border bg-white dark:bg-ps-noite px-4 text-[15px] focus:outline-none focus:ring-2 focus:ring-ps-azul" :class="erros.nome ? 'border-red-500' : 'border-ps-linha dark:border-ps-noite3'" :aria-invalid="(!!erros.nome).toString()" aria-describedby="e-nome">
+        <p id="e-nome" x-show="erros.nome" class="mt-1 text-sm font-semibold text-red-700 dark:text-red-400" x-text="erros.nome"></p>
+      </div>
+      <div>
+        <label for="email" class="text-sm font-semibold">E-mail</label>
+        <input id="email" type="email" x-model="f.email" autocomplete="email" placeholder="nome@psjunior.com" class="mt-2 w-full h-12 rounded-xl border bg-white dark:bg-ps-noite px-4 text-[15px] focus:outline-none focus:ring-2 focus:ring-ps-azul" :class="erros.email ? 'border-red-500' : 'border-ps-linha dark:border-ps-noite3'" :aria-invalid="(!!erros.email).toString()" aria-describedby="e-email">
+        <p id="e-email" x-show="erros.email" class="mt-1 text-sm font-semibold text-red-700 dark:text-red-400" x-text="erros.email"></p>
+      </div>
+      <div>
+        <label for="codigo" class="text-sm font-semibold">Código da turma <span class="font-normal text-ps-cinza dark:text-slate-400">(opcional)</span></label>
+        <input id="codigo" type="text" x-model="f.codigo" autocomplete="off" class="mt-2 w-full h-12 rounded-xl border border-ps-linha dark:border-ps-noite3 bg-white dark:bg-ps-noite px-4 text-[15px] focus:outline-none focus:ring-2 focus:ring-ps-azul">
+        <p class="mt-1 text-xs text-ps-cinza dark:text-slate-400">O instrutor passa o código. Você também pode entrar numa turma depois.</p>
+      </div>
+      <div class="grid sm:grid-cols-2 gap-4">
+        <div>
+          <label for="senha" class="text-sm font-semibold">Senha</label>
+          <input id="senha" type="password" x-model="f.senha" autocomplete="new-password" class="mt-2 w-full h-12 rounded-xl border bg-white dark:bg-ps-noite px-4 text-[15px] focus:outline-none focus:ring-2 focus:ring-ps-azul" :class="erros.senha ? 'border-red-500' : 'border-ps-linha dark:border-ps-noite3'" :aria-invalid="(!!erros.senha).toString()" aria-describedby="e-senha d-senha">
+        </div>
+        <div>
+          <label for="senha2" class="text-sm font-semibold">Confirmar senha</label>
+          <input id="senha2" type="password" x-model="f.senha2" autocomplete="new-password" class="mt-2 w-full h-12 rounded-xl border bg-white dark:bg-ps-noite px-4 text-[15px] focus:outline-none focus:ring-2 focus:ring-ps-azul" :class="erros.senha2 ? 'border-red-500' : 'border-ps-linha dark:border-ps-noite3'" :aria-invalid="(!!erros.senha2).toString()" aria-describedby="e-senha">
+        </div>
+        <div class="sm:col-span-2 -mt-2">
+          <div class="flex gap-1.5" aria-hidden="true">
+            <template x-for="i in 4" :key="i"><span class="h-1.5 flex-1 rounded-full" :class="forca() >= i ? (forca() < 3 ? 'bg-amber-500' : 'bg-emerald-600') : 'bg-ps-linha dark:bg-ps-noite3'"></span></template>
+          </div>
+          <p id="d-senha" class="mt-1.5 text-xs text-ps-cinza dark:text-slate-400" x-text="'Senha ' + ['muito fraca', 'fraca', 'razoável', 'boa', 'forte'][forca()] + '. Use 8 ou mais caracteres, com números e letras maiúsculas.'"></p>
+          <p id="e-senha" x-show="erros.senha || erros.senha2" class="mt-1 text-sm font-semibold text-red-700 dark:text-red-400" x-text="erros.senha || erros.senha2"></p>
+        </div>
+      </div>
+      <label class="flex items-start gap-3 text-sm leading-6 cursor-pointer">
+        <input type="checkbox" x-model="f.termos" class="mt-1 h-5 w-5 rounded accent-[#007FA6]" :aria-invalid="(!!erros.termos).toString()" aria-describedby="e-termos">
+        <span>Li e aceito a <a href="privacidade.html" target="_blank" class="font-semibold text-ps-texto dark:text-ps-claro underline">Política de Privacidade e os Termos de Uso</a>.</span>
+      </label>
+      <p id="e-termos" x-show="erros.termos" class="-mt-3 text-sm font-semibold text-red-700 dark:text-red-400" x-text="erros.termos"></p>
+
+      <button type="submit" class="h-12 rounded-full text-[15px] font-bold bg-ps-azul text-ps-escuro hover:brightness-105 focus:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-ps-texto">Criar conta</button>
+    </form>
+
+    <p class="mt-6 text-sm text-center text-ps-cinza dark:text-slate-400">Já tem conta? <a href="login.html" class="font-semibold text-ps-texto dark:text-ps-claro hover:underline">Entrar</a></p>
+    <p class="mt-4 text-xs text-center text-ps-cinza dark:text-slate-400">Demonstração: nenhum dado é enviado.</p>
+  </div>
+</main>
+
+<script src="js/dados.js"></script>
+<script src="js/app.js"></script>
+<script>
+  function cadastro() {
+    return {
+      f: { nome: '', email: '', codigo: '', senha: '', senha2: '', termos: false }, erros: {},
+      forca() {
+        var s = this.f.senha, n = 0;
+        if (s.length >= 8) n++;
+        if (/[A-Z]/.test(s)) n++;
+        if (/[0-9]/.test(s)) n++;
+        if (/[^A-Za-z0-9]/.test(s) || s.length >= 12) n++;
+        return s ? n : 0;
+      },
+      enviar() {
+        var f = this.f, e = {};
+        if (f.nome.trim().length < 3) e.nome = 'Digite seu nome completo.';
+        if (!/^\S+@\S+\.\S+$/.test(f.email.trim())) e.email = 'Digite um e-mail válido.';
+        if (f.senha.length < 8) e.senha = 'A senha precisa ter pelo menos 8 caracteres.';
+        else if (f.senha !== f.senha2) e.senha2 = 'As senhas não são iguais.';
+        if (!f.termos) e.termos = 'Para continuar, aceite a política e os termos.';
+        this.erros = e;
+        if (Object.keys(e).length) {
+          var primeiro = { nome: 'nome', email: 'email', senha: 'senha', senha2: 'senha2' }[Object.keys(e)[0]];
+          if (primeiro) document.getElementById(primeiro).focus();
+          return;
+        }
+        this.$store.ps.entrar(f.nome.trim(), 'trainee');
+        this.$store.ps.perfil.onboarding = false;
+        this.$store.ps.salvar();
+        location.href = 'boas-vindas.html';
+      }
+    };
+  }
+</script>
+</body>
+</html>

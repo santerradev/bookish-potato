@@ -1,0 +1,169 @@
+<!doctype html>
+<html lang="pt-BR" data-pagina="notas">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Notas | Sala PS</title>
+<link rel="icon" type="image/png" href="img/logo-ps.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<script src="https://cdn.tailwindcss.com"></script>
+<script src="js/tw.js"></script>
+<link rel="stylesheet" href="css/sala.css">
+<script defer src="https://cdn.jsdelivr.net/npm/@alpinejs/collapse@3.14.1/dist/cdn.min.js"></script>
+<script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.14.1/dist/cdn.min.js"></script>
+</head>
+
+<body x-data="pagina()" :class="$store.ps.menu && 'overflow-hidden lg:overflow-auto'" class="font-sans bg-ps-fundo text-ps-escuro dark:bg-ps-noite dark:text-slate-100 min-h-screen">
+
+<main id="conteudo" class="pt-16 lg:pl-72 min-h-screen">
+  <section class="px-4 sm:px-6 py-6 sm:py-8 max-w-5xl mx-auto" aria-labelledby="t-notas">
+    <div class="flex flex-col sm:flex-row sm:items-end gap-4">
+      <div class="flex-1">
+        <h1 id="t-notas" class="text-2xl sm:text-3xl font-extrabold">Notas</h1>
+        <p class="mt-1 text-[15px] text-ps-cinza dark:text-slate-400">Suas notas e os feedbacks dos instrutores.</p>
+      </div>
+      <label class="flex items-center gap-2 text-sm">
+        <span class="text-ps-cinza dark:text-slate-400">Turma</span>
+        <select x-model="filtro" class="h-11 min-w-0 flex-1 sm:flex-none rounded-lg border border-ps-linha dark:border-ps-noite3 bg-white dark:bg-ps-noite2 px-3 text-sm">
+          <option value="">Todas</option>
+          <template x-for="t in turmasComNota()" :key="t.id"><option :value="t.id" x-text="t.nome"></option></template>
+        </select>
+      </label>
+    </div>
+
+    <!-- Resumo geral -->
+    <dl class="mt-6 grid grid-cols-2 lg:grid-cols-4 gap-3">
+      <div class="rounded-2xl border border-ps-linha dark:border-ps-noite3 bg-white dark:bg-ps-noite2 p-4">
+        <dt class="text-xs font-semibold text-ps-cinza dark:text-slate-400">Aproveitamento geral</dt>
+        <dd class="mt-1 text-3xl font-extrabold" x-text="geral().aprov === null ? '-' : geral().aprov + '%'"></dd>
+      </div>
+      <div class="rounded-2xl border border-ps-linha dark:border-ps-noite3 bg-white dark:bg-ps-noite2 p-4">
+        <dt class="text-xs font-semibold text-ps-cinza dark:text-slate-400">Avaliadas</dt>
+        <dd class="mt-1 text-3xl font-extrabold" x-text="geral().avaliadas"></dd>
+      </div>
+      <div class="rounded-2xl border border-ps-linha dark:border-ps-noite3 bg-white dark:bg-ps-noite2 p-4">
+        <dt class="text-xs font-semibold text-ps-cinza dark:text-slate-400">Aguardando nota</dt>
+        <dd class="mt-1 text-3xl font-extrabold" x-text="geral().aguardando"></dd>
+      </div>
+      <div class="rounded-2xl border border-ps-linha dark:border-ps-noite3 bg-white dark:bg-ps-noite2 p-4">
+        <dt class="text-xs font-semibold text-ps-cinza dark:text-slate-400">Não entregues</dt>
+        <dd class="mt-1 text-3xl font-extrabold" x-text="geral().faltam"></dd>
+      </div>
+    </dl>
+
+    <!-- Por turma -->
+    <div class="mt-8 flex flex-col gap-6">
+      <template x-for="t in turmasComNota().filter(x => !filtro || x.id === filtro)" :key="t.id">
+        <section class="rounded-2xl border border-ps-linha dark:border-ps-noite3 bg-white dark:bg-ps-noite2 overflow-hidden">
+          <header class="flex items-center gap-4 px-5 py-4 border-b border-ps-linha dark:border-ps-noite3">
+            <span class="h-10 w-10 rounded-full text-white font-bold inline-flex items-center justify-center shrink-0" :style="'background:' + t.cor" x-text="t.nome.charAt(0)"></span>
+            <a :href="'turma.html?t=' + t.id + '&aba=atividades'" class="flex-1 min-w-0 font-bold truncate hover:underline" x-text="t.nome"></a>
+            <span class="text-sm text-right">
+              <span class="block text-xs text-ps-cinza dark:text-slate-400">Aproveitamento</span>
+              <span class="font-extrabold" x-text="resumo(t).aprov === null ? '-' : resumo(t).aprov + '%'"></span>
+            </span>
+          </header>
+
+          <!-- Tabela (tablet e computador) -->
+          <table class="hidden sm:table w-full text-sm">
+            <thead class="text-left text-xs text-ps-cinza dark:text-slate-400">
+              <tr>
+                <th scope="col" class="px-5 py-3 font-semibold">Atividade</th>
+                <th scope="col" class="px-3 py-3 font-semibold">Tipo</th>
+                <th scope="col" class="px-3 py-3 font-semibold">Situação</th>
+                <th scope="col" class="px-5 py-3 font-semibold text-right">Nota</th>
+              </tr>
+            </thead>
+            <tbody class="divide-y divide-ps-linha dark:divide-ps-noite3">
+              <template x-for="it in avaliaveis(t)" :key="it.id">
+                <tr class="align-top">
+                  <td class="px-5 py-3">
+                    <a :href="$store.ps.urlItem(t.id, it)" class="font-semibold hover:underline" x-text="it.titulo"></a>
+                    <template x-if="feedback(it)">
+                      <p class="mt-1 text-xs leading-5 text-ps-cinza dark:text-slate-400 whitespace-pre-line" x-text="'Feedback: ' + feedback(it)"></p>
+                    </template>
+                  </td>
+                  <td class="px-3 py-3 text-ps-cinza dark:text-slate-400" x-text="$store.ps.rotulo(it.tipo)"></td>
+                  <td class="px-3 py-3"><span class="inline-flex px-2.5 py-1 rounded-full text-xs font-semibold" :class="corStatus(it)" x-text="situacao(it)"></span></td>
+                  <td class="px-5 py-3 text-right font-bold tabular-nums" x-text="$store.ps.nota(it) === null ? '-' : $store.ps.fmt($store.ps.nota(it)) + '/' + it.pontos"></td>
+                </tr>
+              </template>
+            </tbody>
+          </table>
+
+          <!-- Lista (celular) -->
+          <ul class="sm:hidden divide-y divide-ps-linha dark:divide-ps-noite3">
+            <template x-for="it in avaliaveis(t)" :key="it.id">
+              <li class="px-5 py-3">
+                <div class="flex items-start gap-3">
+                  <a :href="$store.ps.urlItem(t.id, it)" class="flex-1 min-w-0 text-sm font-semibold hover:underline" x-text="it.titulo"></a>
+                  <span class="text-sm font-bold tabular-nums" x-text="$store.ps.nota(it) === null ? '-' : $store.ps.fmt($store.ps.nota(it)) + '/' + it.pontos"></span>
+                </div>
+                <div class="mt-1.5 flex items-center gap-2">
+                  <span class="text-xs text-ps-cinza dark:text-slate-400" x-text="$store.ps.rotulo(it.tipo)"></span>
+                  <span class="inline-flex px-2 py-0.5 rounded-full text-xs font-semibold" :class="corStatus(it)" x-text="situacao(it)"></span>
+                </div>
+                <template x-if="feedback(it)">
+                  <p class="mt-2 text-xs leading-5 text-ps-cinza dark:text-slate-400 whitespace-pre-line" x-text="'Feedback: ' + feedback(it)"></p>
+                </template>
+              </li>
+            </template>
+          </ul>
+        </section>
+      </template>
+    </div>
+
+    <p class="mt-6 text-xs text-ps-cinza dark:text-slate-400">Na demo, tarefas e quizzes valem 10 pontos. O aproveitamento considera só o que já tem nota.</p>
+  </section>
+</main>
+
+<script src="js/dados.js"></script>
+<script src="js/app.js"></script>
+<script src="js/layout.js"></script>
+<script>
+  function pagina() {
+    return {
+      filtro: '',
+      init() { this.$store.ps.titulo = 'Notas'; },
+      avaliaveis(t) { return this.$store.ps.itens(t).filter(function (i) { return i.tipo !== 'material'; }); },
+      turmasComNota() { var self = this; return this.$store.ps.turmas().filter(function (t) { return self.avaliaveis(t).length; }); },
+      situacao(it) {
+        var s = this.$store.ps;
+        if (s.nota(it) !== null) return 'Avaliada';
+        if (it.tipo === 'tarefa' && s.entregas[it.id]) return 'Aguardando nota';
+        return 'Não entregue';
+      },
+      corStatus(it) {
+        return {
+          'Avaliada': 'bg-emerald-100 text-emerald-800 dark:bg-emerald-400/15 dark:text-emerald-300',
+          'Aguardando nota': 'bg-ps-suave text-ps-texto dark:bg-ps-noite3 dark:text-ps-claro',
+          'Não entregue': 'bg-ps-fundo text-ps-cinza dark:bg-ps-noite3 dark:text-slate-400'
+        }[this.situacao(it)];
+      },
+      feedback(it) { var c = it.tipo === 'tarefa' ? this.$store.ps.correcao(it.id) : null; return c && c.feedback ? c.feedback : ''; },
+      calcular(lista) {
+        var s = this.$store.ps, self = this, pts = 0, max = 0, r = { avaliadas: 0, aguardando: 0, faltam: 0 };
+        lista.forEach(function (it) {
+          var sit = self.situacao(it);
+          if (sit === 'Avaliada') { r.avaliadas++; pts += s.nota(it); max += it.pontos; }
+          else if (sit === 'Aguardando nota') r.aguardando++;
+          else r.faltam++;
+        });
+        r.aprov = max ? Math.round(pts * 100 / max) : null;
+        return r;
+      },
+      resumo(t) { return this.calcular(this.avaliaveis(t)); },
+      geral() {
+        var self = this, todos = [];
+        this.turmasComNota().forEach(function (t) {
+          if (!self.filtro || t.id === self.filtro) todos = todos.concat(self.avaliaveis(t));
+        });
+        return this.calcular(todos);
+      }
+    };
+  }
+</script>
+</body>
+</html>

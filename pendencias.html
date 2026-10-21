@@ -1,0 +1,93 @@
+<!doctype html>
+<html lang="pt-BR" data-pagina="pendencias">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Pendências | Sala PS</title>
+<link rel="icon" type="image/png" href="img/logo-ps.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<script src="https://cdn.tailwindcss.com"></script>
+<script src="js/tw.js"></script>
+<link rel="stylesheet" href="css/sala.css">
+<script defer src="https://cdn.jsdelivr.net/npm/@alpinejs/collapse@3.14.1/dist/cdn.min.js"></script>
+<script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.14.1/dist/cdn.min.js"></script>
+</head>
+
+<body x-data="pagina()" :class="$store.ps.menu && 'overflow-hidden lg:overflow-auto'" class="font-sans bg-ps-fundo text-ps-escuro dark:bg-ps-noite dark:text-slate-100 min-h-screen">
+
+<main id="conteudo" class="pt-16 lg:pl-72 min-h-screen">
+  <section class="px-4 sm:px-6 py-6 sm:py-8 max-w-4xl mx-auto" aria-labelledby="t-pend">
+    <h1 id="t-pend" class="text-2xl sm:text-3xl font-extrabold">Pendências</h1>
+
+    <div class="mt-5 flex flex-col sm:flex-row sm:items-center gap-3 border-b border-ps-linha dark:border-ps-noite3">
+      <div class="flex gap-1" role="tablist" aria-label="Situação">
+        <template x-for="a in [{id:'pendentes',n:'Pendentes'},{id:'concluidas',n:'Concluídas'}]" :key="a.id">
+          <button type="button" role="tab" @click="aba = a.id" :aria-selected="(aba === a.id).toString()"
+            class="h-12 px-4 text-sm font-semibold border-b-[3px] -mb-px focus:outline-none focus-visible:bg-ps-suave dark:focus-visible:bg-ps-noite3"
+            :class="aba === a.id ? 'border-ps-azul text-ps-texto dark:text-ps-claro' : 'border-transparent text-ps-cinza dark:text-slate-400 hover:text-ps-escuro dark:hover:text-white'">
+            <span x-text="a.n"></span>
+            <span class="ml-1 text-xs text-ps-cinza dark:text-slate-400" x-text="'(' + lista(a.id).length + ')'"></span>
+          </button>
+        </template>
+      </div>
+      <label class="sm:ml-auto mb-3 sm:mb-0 flex items-center gap-2 text-sm">
+        <span class="text-ps-cinza dark:text-slate-400">Turma</span>
+        <select x-model="filtro" class="h-11 min-w-0 flex-1 sm:flex-none rounded-lg border border-ps-linha dark:border-ps-noite3 bg-white dark:bg-ps-noite2 px-3 text-sm">
+          <option value="">Todas</option>
+          <template x-for="t in $store.ps.turmas()" :key="t.id"><option :value="t.id" x-text="t.nome"></option></template>
+        </select>
+      </label>
+    </div>
+
+    <div class="mt-5 flex flex-col gap-3">
+      <template x-for="it in lista(aba)" :key="it.id">
+        <a :href="$store.ps.urlItem(it.turma.id, it)" class="flex items-center gap-4 p-4 rounded-2xl bg-white dark:bg-ps-noite2 border border-ps-linha dark:border-ps-noite3 hover:shadow-md transition-shadow focus:outline-none focus-visible:ring-2 focus-visible:ring-ps-azul">
+          <span class="h-11 w-11 rounded-full inline-flex items-center justify-center shrink-0" :class="$store.ps.corTipo(it.tipo)" x-html="ic(it.tipo)"></span>
+          <span class="min-w-0 flex-1">
+            <span class="block font-semibold truncate" x-text="it.titulo"></span>
+            <span class="block text-sm text-ps-cinza dark:text-slate-400 truncate" x-text="it.turma.nome + ' · ' + $store.ps.rotulo(it.tipo)"></span>
+          </span>
+          <span class="text-xs sm:text-sm shrink-0"
+                :class="$store.ps.concluido(it) ? 'font-semibold text-emerald-700 dark:text-emerald-400' : 'text-ps-cinza dark:text-slate-400'"
+                x-text="$store.ps.resumo(it)"></span>
+        </a>
+      </template>
+
+      <template x-if="lista(aba).length === 0">
+        <div class="text-center py-16">
+          <span class="text-ps-azul inline-flex" x-html="ic('checkCirculo', '!w-14 !h-14')"></span>
+          <p class="mt-4 font-semibold" x-text="aba === 'pendentes' ? 'Tudo em dia!' : 'Nada concluído ainda.'"></p>
+          <p class="mt-1 text-sm text-ps-cinza dark:text-slate-400" x-text="aba === 'pendentes' ? 'Você não tem tarefas ou quizzes pendentes.' : 'As tarefas e os quizzes que você concluir aparecem aqui.'"></p>
+        </div>
+      </template>
+    </div>
+  </section>
+</main>
+
+<script src="js/dados.js"></script>
+<script src="js/app.js"></script>
+<script src="js/layout.js"></script>
+<script>
+  function pagina() {
+    return {
+      aba: 'pendentes', filtro: param('t') || '',
+      init() { this.$store.ps.titulo = 'Pendências'; },
+      lista(qual) {
+        var s = this.$store.ps, filtro = this.filtro, out = [];
+        s.turmas().forEach(function (t) {
+          if (filtro && t.id !== filtro) return;
+          s.itens(t).forEach(function (i) {
+            if (i.tipo === 'material') return;
+            var ok = s.concluido(i);
+            if ((qual === 'pendentes' && !ok) || (qual === 'concluidas' && ok)) out.push(Object.assign({ turma: t }, i));
+          });
+        });
+        return out;
+      }
+    };
+  }
+</script>
+</body>
+</html>

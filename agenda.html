@@ -1,0 +1,234 @@
+<!doctype html>
+<html lang="pt-BR" data-pagina="agenda">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Agenda | Sala PS</title>
+<link rel="icon" type="image/png" href="img/logo-ps.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<script src="https://cdn.tailwindcss.com"></script>
+<script src="js/tw.js"></script>
+<link rel="stylesheet" href="css/sala.css">
+<script defer src="https://cdn.jsdelivr.net/npm/@alpinejs/collapse@3.14.1/dist/cdn.min.js"></script>
+<script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.14.1/dist/cdn.min.js"></script>
+</head>
+
+<body x-data="pagina()" :class="$store.ps.menu && 'overflow-hidden lg:overflow-auto'" class="font-sans bg-ps-fundo text-ps-escuro dark:bg-ps-noite dark:text-slate-100 min-h-screen">
+
+<main id="conteudo" class="pt-16 lg:pl-72 min-h-screen">
+  <section class="px-4 sm:px-6 py-6 sm:py-8 max-w-7xl mx-auto" aria-labelledby="t-agenda">
+    <div class="flex flex-wrap items-center gap-3">
+      <h1 id="t-agenda" class="text-2xl sm:text-3xl font-extrabold mr-auto">Agenda</h1>
+      <button type="button" @click="abrirNovo()" class="h-11 px-5 rounded-full text-sm font-bold bg-ps-azul text-ps-escuro inline-flex items-center gap-2 hover:brightness-105">
+        <span x-html="ic('mais', '!w-4 !h-4')"></span>Novo evento
+      </button>
+    </div>
+
+    <div class="mt-6 grid gap-6 xl:grid-cols-[minmax(0,1fr)_340px] items-start">
+
+      <!-- ================= Calendário ================= -->
+      <div class="rounded-2xl border border-ps-linha dark:border-ps-noite3 bg-white dark:bg-ps-noite2 overflow-hidden">
+        <div class="flex items-center gap-2 px-4 sm:px-5 py-3 border-b border-ps-linha dark:border-ps-noite3">
+          <h2 class="flex-1 text-lg sm:text-xl font-extrabold" aria-live="polite" x-text="meses[mes] + ' de ' + ano"></h2>
+          <button type="button" @click="irHoje()" class="h-10 px-4 rounded-full text-sm font-semibold border border-ps-linha dark:border-ps-noite3 hover:bg-ps-fundo dark:hover:bg-ps-noite3">Hoje</button>
+          <button type="button" @click="mover(-1)" class="h-10 w-10 rounded-full inline-flex items-center justify-center hover:bg-ps-fundo dark:hover:bg-ps-noite3" aria-label="Mês anterior" x-html="ic('esquerda')"></button>
+          <button type="button" @click="mover(1)" class="h-10 w-10 rounded-full inline-flex items-center justify-center hover:bg-ps-fundo dark:hover:bg-ps-noite3" aria-label="Próximo mês" x-html="ic('direita')"></button>
+        </div>
+
+        <div class="grid grid-cols-7 text-center text-xs font-bold text-ps-cinza dark:text-slate-400 border-b border-ps-linha dark:border-ps-noite3" aria-hidden="true">
+          <template x-for="d in ['Dom','Seg','Ter','Qua','Qui','Sex','Sáb']" :key="d"><div class="py-2" x-text="d"></div></template>
+        </div>
+
+        <div class="grid grid-cols-7 gap-px bg-ps-linha dark:bg-ps-noite3" role="grid" :aria-label="meses[mes] + ' de ' + ano">
+          <template x-for="d in dias()" :key="d.iso">
+            <button type="button" @click="sel = d.iso" role="gridcell"
+                    class="relative h-14 sm:h-24 p-1 sm:p-2 text-left flex flex-col items-center sm:items-stretch focus:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-ps-azul"
+                    :class="sel === d.iso ? 'bg-ps-suave dark:bg-ps-noite3' : (d.doMes ? 'bg-white dark:bg-ps-noite2 hover:bg-ps-fundo dark:hover:bg-ps-noite3' : 'bg-ps-fundo dark:bg-ps-noite text-slate-400 dark:text-slate-500 hover:bg-ps-suave dark:hover:bg-ps-noite3')"
+                    :aria-selected="(sel === d.iso).toString()"
+                    :aria-label="rotuloDia(d.iso) + (doDia(d.iso).length ? ', ' + doDia(d.iso).length + ' evento(s)' : '')">
+              <span class="h-7 w-7 rounded-full inline-flex items-center justify-center text-sm font-semibold"
+                    :class="d.iso === hoje ? 'bg-ps-azul text-ps-escuro' : ''" x-text="d.dia"></span>
+              <!-- Celular: pontinhos -->
+              <span class="sm:hidden mt-0.5 flex gap-0.5">
+                <template x-for="e in doDia(d.iso).slice(0, 3)" :key="e.id"><span class="h-1.5 w-1.5 rounded-full" :class="e.criado ? 'bg-ps-escuro dark:bg-white' : 'bg-ps-azul'"></span></template>
+              </span>
+              <!-- Tablet e computador: etiquetas -->
+              <span class="hidden sm:flex flex-col gap-1 mt-1 w-full">
+                <template x-for="e in doDia(d.iso).slice(0, 2)" :key="e.id">
+                  <span class="block w-full truncate rounded px-1.5 py-0.5 text-[11px] font-semibold"
+                        :class="e.criado ? 'bg-ps-escuro text-white dark:bg-white dark:text-ps-escuro' : 'bg-ps-azul text-ps-escuro'" x-text="e.titulo"></span>
+                </template>
+              </span>
+            </button>
+          </template>
+        </div>
+      </div>
+
+      <!-- ================= Lateral ================= -->
+      <div class="flex flex-col gap-5">
+        <section class="rounded-2xl border border-ps-linha dark:border-ps-noite3 bg-white dark:bg-ps-noite2 p-5" aria-labelledby="t-dia">
+          <h2 id="t-dia" class="font-bold first-letter:uppercase" x-text="rotuloDia(sel)"></h2>
+          <template x-if="doDia(sel).length === 0">
+            <p class="mt-2 text-sm text-ps-cinza dark:text-slate-400">Nenhum evento neste dia.</p>
+          </template>
+          <ul class="mt-3 flex flex-col gap-3">
+            <template x-for="e in doDia(sel)" :key="e.id">
+              <li class="flex gap-3">
+                <span class="w-1 rounded-full shrink-0" :class="e.criado ? 'bg-ps-escuro dark:bg-white' : 'bg-ps-azul'"></span>
+                <div class="flex-1 min-w-0">
+                  <p class="font-semibold" x-text="e.titulo"></p>
+                  <p class="text-xs text-ps-cinza dark:text-slate-400" x-text="periodo(e)"></p>
+                  <p x-show="e.descricao" class="mt-1 text-sm" x-text="e.descricao"></p>
+                </div>
+                <button x-show="e.criado" type="button" @click="remover(e)" class="h-9 w-9 rounded-full inline-flex items-center justify-center text-ps-cinza hover:bg-ps-fundo dark:hover:bg-ps-noite3" :aria-label="'Excluir ' + e.titulo" x-html="ic('lixo', '!w-4 !h-4')"></button>
+              </li>
+            </template>
+          </ul>
+        </section>
+
+        <section class="rounded-2xl border border-ps-linha dark:border-ps-noite3 bg-white dark:bg-ps-noite2 p-5" aria-labelledby="t-prox">
+          <h2 id="t-prox" class="font-bold">Próximos eventos</h2>
+          <template x-if="proximos().length === 0">
+            <p class="mt-2 text-sm text-ps-cinza dark:text-slate-400">Nenhum evento marcado.</p>
+          </template>
+          <ul class="mt-3 flex flex-col gap-2">
+            <template x-for="e in proximos()" :key="e.id">
+              <li>
+                <button type="button" @click="irPara(e)" class="w-full flex items-center gap-3 rounded-xl p-2 -mx-2 text-left hover:bg-ps-fundo dark:hover:bg-ps-noite3">
+                  <span class="w-12 shrink-0 text-center rounded-lg py-1" :class="e.criado ? 'bg-ps-escuro text-white dark:bg-white dark:text-ps-escuro' : 'bg-ps-suave text-ps-texto dark:bg-ps-noite3 dark:text-ps-claro'">
+                    <span class="block text-lg font-extrabold leading-none" x-text="e.inicio.slice(8, 10)"></span>
+                    <span class="block text-[10px] font-bold uppercase" x-text="meses[+e.inicio.slice(5, 7) - 1].slice(0, 3)"></span>
+                  </span>
+                  <span class="min-w-0">
+                    <span class="block text-sm font-semibold truncate" x-text="e.titulo"></span>
+                    <span class="block text-xs text-ps-cinza dark:text-slate-400" x-text="periodo(e)"></span>
+                  </span>
+                </button>
+              </li>
+            </template>
+          </ul>
+        </section>
+
+        <section x-show="!$store.ps.instrutor()" class="rounded-2xl border border-ps-linha dark:border-ps-noite3 bg-white dark:bg-ps-noite2 p-5" aria-labelledby="t-sem">
+          <h2 id="t-sem" class="font-bold">Sem data definida</h2>
+          <p class="mt-1 text-sm text-ps-cinza dark:text-slate-400" x-text="semData().length + ' tarefas e quizzes pendentes ainda sem prazo [a definir pelos instrutores].'"></p>
+          <ul class="mt-3 flex flex-col gap-1">
+            <template x-for="it in semData().slice(0, 4)" :key="it.id">
+              <li><a :href="$store.ps.urlItem(it.turma.id, it)" class="flex items-center gap-3 py-1.5 text-sm hover:underline">
+                <span class="h-7 w-7 rounded-full inline-flex items-center justify-center shrink-0" :class="$store.ps.corTipo(it.tipo)" x-html="ic(it.tipo, '!w-4 !h-4')"></span>
+                <span class="truncate" x-text="it.titulo"></span>
+              </a></li>
+            </template>
+          </ul>
+          <a href="pendencias.html" class="mt-3 inline-block text-sm font-semibold text-ps-texto dark:text-ps-claro hover:underline">Ver todas as pendências</a>
+        </section>
+      </div>
+    </div>
+  </section>
+</main>
+
+<!-- Novo evento -->
+<div x-show="modal" x-cloak class="fixed inset-0 z-50 flex items-end sm:items-center justify-center sm:p-4" @keydown.escape.window="modal = false" role="dialog" aria-modal="true" aria-labelledby="t-novo">
+  <div class="absolute inset-0 bg-black/50" @click="modal = false"></div>
+  <form class="relative w-full sm:max-w-md bg-white dark:bg-ps-noite2 rounded-t-2xl sm:rounded-2xl p-6 shadow-xl" @submit.prevent="salvarEvento()">
+    <h2 id="t-novo" class="text-xl font-extrabold">Novo evento</h2>
+    <label for="ev-titulo" class="block mt-5 text-sm font-semibold">Título</label>
+    <input id="ev-titulo" x-ref="titulo" x-model="form.titulo" type="text" class="mt-2 w-full h-12 rounded-xl border border-ps-linha dark:border-ps-noite3 bg-transparent px-4 focus:outline-none focus:ring-2 focus:ring-ps-azul">
+    <div class="mt-4 grid grid-cols-2 gap-3">
+      <div>
+        <label for="ev-ini" class="block text-sm font-semibold">Início</label>
+        <input id="ev-ini" x-model="form.inicio" type="date" class="mt-2 w-full h-12 rounded-xl border border-ps-linha dark:border-ps-noite3 bg-transparent px-3 focus:outline-none focus:ring-2 focus:ring-ps-azul dark:[color-scheme:dark]">
+      </div>
+      <div>
+        <label for="ev-fim" class="block text-sm font-semibold">Fim (opcional)</label>
+        <input id="ev-fim" x-model="form.fim" type="date" :min="form.inicio" class="mt-2 w-full h-12 rounded-xl border border-ps-linha dark:border-ps-noite3 bg-transparent px-3 focus:outline-none focus:ring-2 focus:ring-ps-azul dark:[color-scheme:dark]">
+      </div>
+    </div>
+    <label for="ev-desc" class="block mt-4 text-sm font-semibold">Descrição</label>
+    <textarea id="ev-desc" x-model="form.descricao" rows="3" class="mt-2 w-full rounded-xl border border-ps-linha dark:border-ps-noite3 bg-transparent p-3 focus:outline-none focus:ring-2 focus:ring-ps-azul"></textarea>
+    <div class="mt-6 flex justify-end gap-2">
+      <button type="button" @click="modal = false" class="h-11 px-5 rounded-full text-sm font-semibold hover:bg-ps-fundo dark:hover:bg-ps-noite3">Cancelar</button>
+      <button type="submit" :disabled="!form.titulo.trim() || !form.inicio" class="h-11 px-5 rounded-full text-sm font-bold bg-ps-azul text-ps-escuro disabled:opacity-40 disabled:cursor-not-allowed">Salvar</button>
+    </div>
+  </form>
+</div>
+
+<script src="js/dados.js"></script>
+<script src="js/app.js"></script>
+<script src="js/layout.js"></script>
+<script>
+  function pagina() {
+    var agora = new Date();
+    return {
+      ano: agora.getFullYear(), mes: agora.getMonth(), hoje: hojeISO(), sel: hojeISO(),
+      modal: false, form: { titulo: '', inicio: '', fim: '', descricao: '' },
+      meses: ['Janeiro', 'Fevereiro', 'Março', 'Abril', 'Maio', 'Junho', 'Julho', 'Agosto', 'Setembro', 'Outubro', 'Novembro', 'Dezembro'],
+      init() { this.$store.ps.titulo = 'Agenda'; },
+      iso(d) { return d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0'); },
+      mover(passo) {
+        var m = this.mes + passo;
+        this.ano += Math.floor(m / 12);
+        this.mes = ((m % 12) + 12) % 12;
+      },
+      irHoje() { var d = new Date(); this.ano = d.getFullYear(); this.mes = d.getMonth(); this.sel = this.hoje; },
+      dias() {
+        var primeiro = new Date(this.ano, this.mes, 1), out = [];
+        for (var i = 0; i < 42; i++) {
+          var d = new Date(this.ano, this.mes, 1 - primeiro.getDay() + i);
+          out.push({ iso: this.iso(d), dia: d.getDate(), doMes: d.getMonth() === this.mes });
+        }
+        return out;
+      },
+      eventos() {
+        var s = this.$store.ps, prazos = [];
+        s.turmas().forEach(function (t) {
+          s.itens(t).forEach(function (i) {
+            if (i.prazo) prazos.push({ id: 'pz-' + i.id, titulo: 'Prazo: ' + i.titulo, inicio: i.prazo, fim: i.prazo, descricao: t.nome, prazo: true });
+          });
+        });
+        return EVENTOS.concat(prazos).concat(s.eventos.map(function (e) { return Object.assign({ criado: true }, e); }));
+      },
+      doDia(iso) { return this.eventos().filter(function (e) { return e.inicio <= iso && iso <= (e.fim || e.inicio); }); },
+      proximos() {
+        var h = this.hoje;
+        return this.eventos().filter(function (e) { return (e.fim || e.inicio) >= h; })
+          .sort(function (a, b) { return a.inicio < b.inicio ? -1 : 1; }).slice(0, 6);
+      },
+      semData() {
+        var s = this.$store.ps, out = [];
+        s.turmas().forEach(function (t) {
+          s.pendentes(t).forEach(function (i) { if (!i.prazo) out.push(Object.assign({ turma: t }, i)); });
+        });
+        return out;
+      },
+      rotuloDia(iso) {
+        return new Date(iso + 'T12:00:00').toLocaleDateString('pt-BR', { weekday: 'long', day: 'numeric', month: 'long' });
+      },
+      periodo(e) { return e.fim && e.fim !== e.inicio ? dataCurta(e.inicio) + ' a ' + dataCurta(e.fim) : dataCurta(e.inicio); },
+      irPara(e) { this.ano = +e.inicio.slice(0, 4); this.mes = +e.inicio.slice(5, 7) - 1; this.sel = e.inicio; },
+      abrirNovo() {
+        var self = this;
+        this.form = { titulo: '', inicio: this.sel, fim: '', descricao: '' };
+        this.modal = true;
+        this.$nextTick(function () { self.$refs.titulo.focus(); });
+      },
+      salvarEvento() {
+        var f = this.form;
+        if (!f.titulo.trim() || !f.inicio) return;
+        var fim = f.fim && f.fim >= f.inicio ? f.fim : f.inicio;
+        this.$store.ps.eventos = this.$store.ps.eventos.concat([{ id: 'e-' + Date.now(), titulo: f.titulo.trim(), inicio: f.inicio, fim: fim, descricao: f.descricao.trim() }]);
+        this.modal = false;
+        this.irPara({ inicio: f.inicio });
+        this.$store.ps.avisar('Evento salvo na sua agenda.');
+      },
+      remover(e) {
+        this.$store.ps.eventos = this.$store.ps.eventos.filter(function (x) { return x.id !== e.id; });
+        this.$store.ps.avisar('Evento excluído.');
+      }
+    };
+  }
+</script>
+</body>
+</html>

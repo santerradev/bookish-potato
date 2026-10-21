@@ -1,0 +1,43 @@
+<!doctype html>
+<html lang="pt-BR" data-pagina="404">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Página não encontrada | Sala PS</title>
+<!-- No GitHub Pages, esta página aparece em qualquer endereço inexistente.
+     O <base> abaixo faz os arquivos (js, css, imagens) carregarem da raiz do projeto. -->
+<script>
+  (function () {
+    var partes = location.pathname.split('/');
+    var base = location.hostname.slice(-10) === 'github.io' && partes.length > 2 ? '/' + partes[1] + '/' : './';
+    document.write('<base href="' + base + '">');
+  })();
+</script>
+<link rel="icon" type="image/png" href="img/logo-ps.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<script src="https://cdn.tailwindcss.com"></script>
+<script src="js/tw.js"></script>
+<link rel="stylesheet" href="css/sala.css">
+</head>
+
+<body class="font-sans bg-ps-fundo text-ps-escuro dark:bg-ps-noite dark:text-slate-100 min-h-screen flex flex-col">
+<main id="conteudo" class="flex-1 flex items-center justify-center px-6 py-16">
+  <div class="max-w-lg text-center">
+    <a href="index.html" class="inline-flex items-center gap-2.5">
+      <img src="img/logo-ps.png" alt="" width="133" height="180" class="h-9 w-auto">
+      <span class="text-xl font-extrabold tracking-tight">Sala <span class="text-ps-texto dark:text-ps-claro">PS</span></span>
+    </a>
+    <p class="mt-10 text-[96px] sm:text-[128px] font-extrabold leading-none text-ps-azul">404</p>
+    <h1 class="mt-4 text-2xl sm:text-3xl font-extrabold">Página não encontrada</h1>
+    <p class="mt-3 text-[15px] leading-7 text-ps-cinza dark:text-slate-400">O endereço pode estar errado, ou a turma ou atividade não existe mais.</p>
+    <div class="mt-8 flex flex-wrap justify-center gap-3">
+      <a href="index.html" class="h-12 px-6 rounded-full text-[15px] font-bold bg-ps-azul text-ps-escuro inline-flex items-center hover:brightness-105 focus:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-ps-texto">Voltar ao início</a>
+      <a href="pendencias.html" class="h-12 px-6 rounded-full text-[15px] font-semibold border border-ps-linha dark:border-ps-noite3 inline-flex items-center hover:bg-white dark:hover:bg-ps-noite2">Ver pendências</a>
+    </div>
+  </div>
+</main>
+<p class="pb-8 text-center text-xs font-bold tracking-[1.5px] text-ps-cinza dark:text-slate-500">PS JÚNIOR PSEL26/2</p>
+</body>
+</html>

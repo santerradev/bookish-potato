@@ -1,0 +1,130 @@
+<!doctype html>
+<html lang="pt-BR" data-pagina="admin-usuarios" data-papel="admin">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Usuários | Sala PS</title>
+<link rel="icon" type="image/png" href="img/logo-ps.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<script src="https://cdn.tailwindcss.com"></script>
+<script src="js/tw.js"></script>
+<link rel="stylesheet" href="css/sala.css">
+<script defer src="https://cdn.jsdelivr.net/npm/@alpinejs/collapse@3.14.1/dist/cdn.min.js"></script>
+<script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.14.1/dist/cdn.min.js"></script>
+</head>
+
+<body x-data="pagina()" :class="$store.ps.menu && 'overflow-hidden lg:overflow-auto'" class="font-sans bg-ps-fundo text-ps-escuro dark:bg-ps-noite dark:text-slate-100 min-h-screen">
+
+<main id="conteudo" class="pt-16 lg:pl-72 min-h-screen">
+  <div class="px-4 sm:px-6 py-6 sm:py-8 max-w-6xl mx-auto">
+    <p class="text-xs font-bold tracking-[1.5px] text-ps-texto dark:text-ps-claro">ADMINISTRAÇÃO</p>
+    <div class="mt-1 flex flex-wrap items-center gap-3">
+      <h1 class="text-2xl sm:text-3xl font-extrabold mr-auto">Usuários</h1>
+      <button type="button" @click="$store.ps.avisar('Demo: na versão final, importa uma planilha com nome, e-mail e perfil.')" class="h-11 px-4 rounded-full text-sm font-semibold border border-ps-linha dark:border-ps-noite3 bg-white dark:bg-ps-noite2 inline-flex items-center gap-2 hover:border-ps-azul"><span x-html="ic('download', '!w-4 !h-4 rotate-180')"></span>Importar CSV</button>
+      <button type="button" @click="abrir()" class="h-11 px-5 rounded-full text-sm font-bold bg-ps-azul text-ps-escuro inline-flex items-center gap-2 hover:brightness-105"><span x-html="ic('usuarioMais', '!w-4 !h-4')"></span>Novo usuário</button>
+    </div>
+
+    <div class="mt-5 flex flex-col sm:flex-row gap-3">
+      <div class="flex-1 flex items-center gap-2 h-11 px-4 rounded-full bg-white dark:bg-ps-noite2 border border-ps-linha dark:border-ps-noite3 focus-within:ring-2 focus-within:ring-ps-azul">
+        <span class="text-ps-cinza" x-html="ic('busca', '!w-4 !h-4')"></span>
+        <label for="q" class="sr-only">Buscar usuário</label>
+        <input id="q" type="search" x-model="q" placeholder="Buscar por nome ou e-mail" class="flex-1 min-w-0 bg-transparent text-sm focus:outline-none">
+      </div>
+      <label class="flex items-center gap-2 text-sm"><span class="text-ps-cinza dark:text-slate-400">Perfil</span>
+        <select x-model="perfil" class="h-11 rounded-lg border border-ps-linha dark:border-ps-noite3 bg-white dark:bg-ps-noite2 px-3 text-sm">
+          <option value="">Todos</option><option value="trainee">Trainee</option><option value="instrutor">Instrutor(a)</option><option value="admin">Administrador(a)</option>
+        </select>
+      </label>
+    </div>
+
+    <div class="mt-4 rounded-2xl bg-white dark:bg-ps-noite2 border border-ps-linha dark:border-ps-noite3 overflow-hidden">
+      <table class="w-full text-sm">
+        <thead class="text-left text-xs text-ps-cinza dark:text-slate-400 border-b border-ps-linha dark:border-ps-noite3">
+          <tr><th class="px-5 py-3 font-semibold">Usuário</th><th class="px-3 py-3 font-semibold hidden md:table-cell">E-mail</th><th class="px-3 py-3 font-semibold">Perfil</th><th class="px-5 py-3 font-semibold text-right">Ativo</th></tr>
+        </thead>
+        <tbody class="divide-y divide-ps-linha dark:divide-ps-noite3">
+          <template x-for="u in lista()" :key="u.id">
+            <tr :class="!u.ativo && 'opacity-60'">
+              <td class="px-5 py-3">
+                <div class="flex items-center gap-3">
+                  <span class="h-9 w-9 rounded-full text-xs font-bold inline-flex items-center justify-center shrink-0" :class="u.voce ? 'bg-ps-azul text-ps-escuro' : 'bg-ps-suave text-ps-texto dark:bg-ps-noite3 dark:text-ps-claro'" x-text="$store.ps.iniciais(u.nome)"></span>
+                  <div class="min-w-0"><p class="font-semibold truncate" x-text="u.nome"></p><p class="md:hidden text-xs text-ps-cinza dark:text-slate-400 truncate" x-text="u.email"></p></div>
+                </div>
+              </td>
+              <td class="px-3 py-3 hidden md:table-cell text-ps-cinza dark:text-slate-400" x-text="u.email"></td>
+              <td class="px-3 py-3">
+                <template x-if="u.voce"><span class="text-sm" x-text="$store.ps.nomePapel(u.papel) + ' (sua visão)'"></span></template>
+                <template x-if="!u.voce">
+                  <select :aria-label="'Perfil de ' + u.nome" :value="u.papel" @change="$store.ps.editarUsuario(u.id, { papel: $event.target.value }); $store.ps.avisar('Perfil atualizado.')" class="h-10 rounded-lg border border-ps-linha dark:border-ps-noite3 bg-white dark:bg-ps-noite2 px-2 text-sm">
+                    <option value="trainee" :selected="u.papel === 'trainee'">Trainee</option>
+                    <option value="instrutor" :selected="u.papel === 'instrutor'">Instrutor(a)</option>
+                    <option value="admin" :selected="u.papel === 'admin'">Administrador(a)</option>
+                  </select>
+                </template>
+              </td>
+              <td class="px-5 py-3 text-right">
+                <button type="button" role="switch" :disabled="u.voce" :aria-checked="u.ativo.toString()" :aria-label="'Conta de ' + u.nome + ' ativa'" @click="$store.ps.editarUsuario(u.id, { ativo: !u.ativo })"
+                        class="relative inline-block h-7 w-12 rounded-full transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-ps-azul disabled:opacity-50 disabled:cursor-not-allowed" :class="u.ativo ? 'bg-ps-texto dark:bg-ps-azul' : 'bg-slate-300 dark:bg-slate-600'">
+                  <span class="absolute top-1 left-1 h-5 w-5 rounded-full bg-white shadow transition-transform" :class="u.ativo && 'translate-x-5'"></span>
+                </button>
+              </td>
+            </tr>
+          </template>
+        </tbody>
+      </table>
+      <p x-show="lista().length === 0" class="px-5 py-8 text-center text-sm text-ps-cinza dark:text-slate-400">Nenhum usuário encontrado.</p>
+    </div>
+    <p class="mt-3 text-xs text-ps-cinza dark:text-slate-400" x-text="lista().length + ' de ' + $store.ps.usuarios().length + ' usuários. Nomes e e-mails entre colchetes são exemplos.'"></p>
+  </div>
+</main>
+
+<!-- Novo usuário -->
+<div x-show="modal" x-cloak class="fixed inset-0 z-50 flex items-end sm:items-center justify-center sm:p-4" @keydown.escape.window="modal = false" role="dialog" aria-modal="true" aria-labelledby="t-novo">
+  <div class="absolute inset-0 bg-black/50" @click="modal = false"></div>
+  <form class="relative w-full sm:max-w-md bg-white dark:bg-ps-noite2 rounded-t-2xl sm:rounded-2xl p-6 shadow-xl" @submit.prevent="criar()" novalidate>
+    <h2 id="t-novo" class="text-xl font-extrabold">Novo usuário</h2>
+    <label for="n-nome" class="block mt-5 text-sm font-semibold">Nome</label>
+    <input id="n-nome" x-ref="nome" x-model="f.nome" type="text" class="mt-2 w-full h-12 rounded-xl border border-ps-linha dark:border-ps-noite3 bg-transparent px-4 focus:outline-none focus:ring-2 focus:ring-ps-azul">
+    <label for="n-email" class="block mt-4 text-sm font-semibold">E-mail</label>
+    <input id="n-email" x-model="f.email" type="email" class="mt-2 w-full h-12 rounded-xl border bg-transparent px-4 focus:outline-none focus:ring-2 focus:ring-ps-azul" :class="erro ? 'border-red-500' : 'border-ps-linha dark:border-ps-noite3'" aria-describedby="n-erro">
+    <p id="n-erro" x-show="erro" class="mt-1 text-sm font-semibold text-red-700 dark:text-red-400" x-text="erro"></p>
+    <label for="n-perfil" class="block mt-4 text-sm font-semibold">Perfil</label>
+    <select id="n-perfil" x-model="f.papel" class="mt-2 w-full h-12 rounded-xl border border-ps-linha dark:border-ps-noite3 bg-white dark:bg-ps-noite2 px-3">
+      <option value="trainee">Trainee</option><option value="instrutor">Instrutor(a)</option><option value="admin">Administrador(a)</option>
+    </select>
+    <p class="mt-3 text-xs text-ps-cinza dark:text-slate-400">Na versão final, a pessoa recebe um convite por e-mail para criar a senha.</p>
+    <div class="mt-6 flex justify-end gap-2">
+      <button type="button" @click="modal = false" class="h-11 px-5 rounded-full text-sm font-semibold hover:bg-ps-fundo dark:hover:bg-ps-noite3">Cancelar</button>
+      <button type="submit" :disabled="!f.nome.trim()" class="h-11 px-5 rounded-full text-sm font-bold bg-ps-azul text-ps-escuro disabled:opacity-40">Cadastrar</button>
+    </div>
+  </form>
+</div>
+
+<script src="js/dados.js"></script>
+<script src="js/app.js"></script>
+<script src="js/layout.js"></script>
+<script>
+  function pagina() {
+    return {
+      q: '', perfil: '', modal: false, f: { nome: '', email: '', papel: 'trainee' }, erro: '',
+      init() { this.$store.ps.titulo = 'Usuários'; if (location.hash === '#novo') this.abrir(); },
+      lista() {
+        var q = this.q.trim().toLowerCase(), p = this.perfil;
+        return this.$store.ps.usuarios().filter(function (u) {
+          return (!p || u.papel === p) && (!q || (u.nome + ' ' + u.email).toLowerCase().indexOf(q) >= 0);
+        });
+      },
+      abrir() { var self = this; this.f = { nome: '', email: '', papel: 'trainee' }; this.erro = ''; this.modal = true; this.$nextTick(function () { self.$refs.nome.focus(); }); },
+      criar() {
+        if (!this.f.nome.trim()) return;
+        if (!/^\S+@\S+\.\S+$/.test(this.f.email.trim())) { this.erro = 'Digite um e-mail válido.'; return; }
+        this.$store.ps.criarUsuario({ nome: this.f.nome.trim(), email: this.f.email.trim(), papel: this.f.papel });
+        this.modal = false; this.$store.ps.avisar('Usuário cadastrado.');
+      }
+    };
+  }
+</script>
+</body>
+</html>

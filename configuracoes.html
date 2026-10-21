@@ -1,0 +1,140 @@
+<!doctype html>
+<html lang="pt-BR" data-pagina="configuracoes">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Configurações | Sala PS</title>
+<link rel="icon" type="image/png" href="img/logo-ps.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<script src="https://cdn.tailwindcss.com"></script>
+<script src="js/tw.js"></script>
+<link rel="stylesheet" href="css/sala.css">
+<script defer src="https://cdn.jsdelivr.net/npm/@alpinejs/collapse@3.14.1/dist/cdn.min.js"></script>
+<script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.14.1/dist/cdn.min.js"></script>
+</head>
+
+<body x-data="pagina()" :class="$store.ps.menu && 'overflow-hidden lg:overflow-auto'" class="font-sans bg-ps-fundo text-ps-escuro dark:bg-ps-noite dark:text-slate-100 min-h-screen">
+
+<main id="conteudo" class="pt-16 lg:pl-72 min-h-screen">
+  <div class="px-4 sm:px-6 py-6 sm:py-8 max-w-3xl mx-auto">
+    <h1 class="text-2xl sm:text-3xl font-extrabold">Configurações</h1>
+
+    <!-- Aparência -->
+    <section class="mt-6 rounded-2xl bg-white dark:bg-ps-noite2 border border-ps-linha dark:border-ps-noite3 p-5 sm:p-6" aria-labelledby="t-apar">
+      <h2 id="t-apar" class="text-lg font-bold">Aparência</h2>
+      <fieldset class="mt-4">
+        <legend class="text-sm font-semibold">Tema</legend>
+        <div class="mt-3 grid grid-cols-3 gap-3">
+          <template x-for="t in [{v:'claro',n:'Claro',i:'sol'},{v:'escuro',n:'Escuro',i:'lua'},{v:'sistema',n:'Sistema',i:'engrenagem'}]" :key="t.v">
+            <label class="cursor-pointer">
+              <input type="radio" name="tema" class="peer sr-only" :value="t.v" :checked="tema === t.v" @change="tema = t.v; $store.ps.definirTema(t.v)">
+              <span class="flex flex-col items-center gap-2 rounded-2xl border-2 py-4 text-sm font-semibold peer-focus-visible:ring-2 peer-focus-visible:ring-ps-azul"
+                    :class="tema === t.v ? 'border-ps-azul bg-ps-suave dark:bg-ps-noite3' : 'border-ps-linha dark:border-ps-noite3 hover:border-ps-claro'">
+                <span x-html="ic(t.i)"></span><span x-text="t.n"></span>
+              </span>
+            </label>
+          </template>
+        </div>
+      </fieldset>
+      <div class="mt-5 divide-y divide-ps-linha dark:divide-ps-noite3">
+        <div class="flex items-center gap-4 py-4">
+          <div class="flex-1"><p id="r-fonte" class="font-semibold text-[15px]">Texto maior</p><p class="text-sm text-ps-cinza dark:text-slate-400">Aumenta o tamanho das letras em toda a plataforma.</p></div>
+          <button type="button" role="switch" aria-labelledby="r-fonte" :aria-checked="($store.ps.config.fonte === 'grande').toString()" @click="$store.ps.config.fonte = $store.ps.config.fonte === 'grande' ? 'normal' : 'grande'"
+                  class="relative h-7 w-12 shrink-0 rounded-full transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-ps-azul" :class="$store.ps.config.fonte === 'grande' ? 'bg-ps-texto dark:bg-ps-azul' : 'bg-slate-300 dark:bg-slate-600'">
+            <span class="absolute top-1 left-1 h-5 w-5 rounded-full bg-white shadow transition-transform" :class="$store.ps.config.fonte === 'grande' && 'translate-x-5'"></span>
+          </button>
+        </div>
+        <div class="flex items-center gap-4 py-4">
+          <div class="flex-1"><p id="r-anim" class="font-semibold text-[15px]">Reduzir animações</p><p class="text-sm text-ps-cinza dark:text-slate-400">Remove transições e movimentos da interface.</p></div>
+          <button type="button" role="switch" aria-labelledby="r-anim" :aria-checked="(!!$store.ps.config.reduzir).toString()" @click="$store.ps.config.reduzir = !$store.ps.config.reduzir"
+                  class="relative h-7 w-12 shrink-0 rounded-full transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-ps-azul" :class="$store.ps.config.reduzir ? 'bg-ps-texto dark:bg-ps-azul' : 'bg-slate-300 dark:bg-slate-600'">
+            <span class="absolute top-1 left-1 h-5 w-5 rounded-full bg-white shadow transition-transform" :class="$store.ps.config.reduzir && 'translate-x-5'"></span>
+          </button>
+        </div>
+      </div>
+    </section>
+
+    <!-- Notificações -->
+    <section id="notificacoes" class="mt-6 scroll-mt-24 rounded-2xl bg-white dark:bg-ps-noite2 border border-ps-linha dark:border-ps-noite3 p-5 sm:p-6" aria-labelledby="t-notif">
+      <h2 id="t-notif" class="text-lg font-bold">Notificações</h2>
+      <p class="mt-1 text-sm text-ps-cinza dark:text-slate-400">Escolha o que aparece no sino.</p>
+      <div class="mt-2 divide-y divide-ps-linha dark:divide-ps-noite3">
+        <template x-for="o in opcoesNotif" :key="o.k">
+          <div class="flex items-center gap-4 py-4">
+            <div class="flex-1"><p :id="'n-' + o.k" class="font-semibold text-[15px]" x-text="o.t"></p><p class="text-sm text-ps-cinza dark:text-slate-400" x-text="o.d"></p></div>
+            <button type="button" role="switch" :aria-labelledby="'n-' + o.k" :aria-checked="(!!$store.ps.config.notif[o.k]).toString()" @click="$store.ps.config.notif[o.k] = !$store.ps.config.notif[o.k]"
+                    class="relative h-7 w-12 shrink-0 rounded-full transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-ps-azul" :class="$store.ps.config.notif[o.k] ? 'bg-ps-texto dark:bg-ps-azul' : 'bg-slate-300 dark:bg-slate-600'">
+              <span class="absolute top-1 left-1 h-5 w-5 rounded-full bg-white shadow transition-transform" :class="$store.ps.config.notif[o.k] && 'translate-x-5'"></span>
+            </button>
+          </div>
+        </template>
+      </div>
+    </section>
+
+    <!-- Privacidade -->
+    <section class="mt-6 rounded-2xl bg-white dark:bg-ps-noite2 border border-ps-linha dark:border-ps-noite3 p-5 sm:p-6" aria-labelledby="t-priv">
+      <h2 id="t-priv" class="text-lg font-bold">Privacidade e dados</h2>
+      <div class="mt-2 divide-y divide-ps-linha dark:divide-ps-noite3">
+        <div class="flex items-center gap-4 py-4">
+          <div class="flex-1"><p id="r-vis" class="font-semibold text-[15px]">Mostrar meu perfil para a turma</p><p class="text-sm text-ps-cinza dark:text-slate-400">Colegas veem seu nome e sua área de interesse na aba Pessoas.</p></div>
+          <button type="button" role="switch" aria-labelledby="r-vis" :aria-checked="(!!$store.ps.config.perfilVisivel).toString()" @click="$store.ps.config.perfilVisivel = !$store.ps.config.perfilVisivel"
+                  class="relative h-7 w-12 shrink-0 rounded-full transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-ps-azul" :class="$store.ps.config.perfilVisivel ? 'bg-ps-texto dark:bg-ps-azul' : 'bg-slate-300 dark:bg-slate-600'">
+            <span class="absolute top-1 left-1 h-5 w-5 rounded-full bg-white shadow transition-transform" :class="$store.ps.config.perfilVisivel && 'translate-x-5'"></span>
+          </button>
+        </div>
+        <div class="flex flex-col sm:flex-row sm:items-center gap-3 py-4">
+          <div class="flex-1"><p class="font-semibold text-[15px]">Baixar meus dados</p><p class="text-sm text-ps-cinza dark:text-slate-400">Um arquivo com tudo o que você fez na demo (portabilidade, LGPD).</p></div>
+          <button type="button" @click="baixar()" class="h-11 px-5 rounded-full text-sm font-semibold border border-ps-linha dark:border-ps-noite3 inline-flex items-center gap-2 hover:bg-ps-fundo dark:hover:bg-ps-noite3"><span x-html="ic('download', '!w-4 !h-4')"></span>Baixar</button>
+        </div>
+        <div class="flex flex-col sm:flex-row sm:items-center gap-3 py-4">
+          <div class="flex-1"><p class="font-semibold text-[15px]">Apagar meus dados</p><p class="text-sm text-ps-cinza dark:text-slate-400">Remove entregas, notas, avisos e preferências deste navegador.</p></div>
+          <button type="button" @click="$store.ps.restaurar()" class="h-11 px-5 rounded-full text-sm font-semibold text-red-700 dark:text-red-400 border border-red-200 dark:border-red-400/30 inline-flex items-center gap-2 hover:bg-red-50 dark:hover:bg-red-400/10"><span x-html="ic('lixo', '!w-4 !h-4')"></span>Apagar</button>
+        </div>
+      </div>
+      <a href="privacidade.html" class="mt-2 inline-block text-sm font-semibold text-ps-texto dark:text-ps-claro hover:underline">Ler a política de privacidade</a>
+    </section>
+
+    <!-- Conta -->
+    <section class="mt-6 rounded-2xl bg-white dark:bg-ps-noite2 border border-ps-linha dark:border-ps-noite3 p-5 sm:p-6" aria-labelledby="t-conta">
+      <h2 id="t-conta" class="text-lg font-bold">Conta</h2>
+      <div class="mt-4 flex flex-wrap gap-3">
+        <a href="perfil.html" class="h-11 px-5 rounded-full text-sm font-semibold border border-ps-linha dark:border-ps-noite3 inline-flex items-center gap-2 hover:bg-ps-fundo dark:hover:bg-ps-noite3"><span x-html="ic('perfil', '!w-4 !h-4')"></span>Editar perfil</a>
+        <button type="button" @click="$store.ps.avisar('Demo: na versão final, enviamos um link para trocar a senha.')" class="h-11 px-5 rounded-full text-sm font-semibold border border-ps-linha dark:border-ps-noite3 inline-flex items-center gap-2 hover:bg-ps-fundo dark:hover:bg-ps-noite3"><span x-html="ic('cadeado', '!w-4 !h-4')"></span>Trocar senha</button>
+        <button type="button" @click="$store.ps.sair()" class="h-11 px-5 rounded-full text-sm font-semibold border border-ps-linha dark:border-ps-noite3 inline-flex items-center gap-2 hover:bg-ps-fundo dark:hover:bg-ps-noite3"><span x-html="ic('sair', '!w-4 !h-4')"></span>Sair</button>
+      </div>
+    </section>
+    <p class="mt-6 text-xs text-ps-cinza dark:text-slate-400">As alterações são salvas automaticamente.</p>
+  </div>
+</main>
+
+<script src="js/dados.js"></script>
+<script src="js/app.js"></script>
+<script src="js/layout.js"></script>
+<script>
+  function pagina() {
+    return {
+      tema: 'sistema',
+      opcoesNotif: [
+        { k: 'avisos', t: 'Avisos e novas atividades', d: 'Quando um instrutor publica algo nas suas turmas.' },
+        { k: 'notas', t: 'Notas devolvidas', d: 'Quando uma tarefa sua é avaliada.' },
+        { k: 'comentarios', t: 'Comentários particulares', d: 'Quando alguém responde numa conversa particular.' },
+        { k: 'agenda', t: 'Eventos da agenda', d: 'Lembretes de encontros e eventos, como a Imersão.' },
+        { k: 'email', t: 'Também por e-mail', d: '[Na versão final, envia um resumo por e-mail.]' }
+      ],
+      init() { this.$store.ps.titulo = 'Configurações'; this.tema = this.$store.ps.temaEscolhido(); },
+      baixar() {
+        var dados = {};
+        try { dados = JSON.parse(localStorage.getItem(SALA_CHAVE) || '{}'); } catch (e) {}
+        var blob = new Blob([JSON.stringify(dados, null, 2)], { type: 'application/json' });
+        var a = document.createElement('a');
+        a.href = URL.createObjectURL(blob); a.download = 'meus-dados-sala-ps.json';
+        document.body.appendChild(a); a.click(); a.remove();
+        this.$store.ps.avisar('Arquivo baixado.');
+      }
+    };
+  }
+</script>
+</body>
+</html>

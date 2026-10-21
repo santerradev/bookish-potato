@@ -1,0 +1,94 @@
+<!doctype html>
+<html lang="pt-BR" data-pagina="privacidade">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Privacidade e termos | Sala PS</title>
+<link rel="icon" type="image/png" href="img/logo-ps.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<script src="https://cdn.tailwindcss.com"></script>
+<script src="js/tw.js"></script>
+<link rel="stylesheet" href="css/sala.css">
+<script defer src="https://cdn.jsdelivr.net/npm/@alpinejs/collapse@3.14.1/dist/cdn.min.js"></script>
+<script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.14.1/dist/cdn.min.js"></script>
+</head>
+
+<body x-data class="font-sans bg-ps-fundo text-ps-escuro dark:bg-ps-noite dark:text-slate-100 min-h-screen">
+
+<header class="sticky top-0 z-10 h-16 px-4 sm:px-6 flex items-center justify-between bg-ps-fundo/90 dark:bg-ps-noite/90 backdrop-blur border-b border-ps-linha dark:border-ps-noite3">
+  <a :href="$store.ps.usuario ? 'index.html' : 'login.html'" class="flex items-center gap-2.5 rounded-lg focus:outline-none focus-visible:ring-2 focus-visible:ring-ps-azul">
+    <img src="img/logo-ps.png" alt="" width="133" height="180" class="h-7 w-auto">
+    <span class="font-extrabold text-lg tracking-tight">Sala <span class="text-ps-texto dark:text-ps-claro">PS</span></span>
+  </a>
+  <div class="flex items-center gap-1">
+    <a :href="$store.ps.usuario ? 'index.html' : 'login.html'" class="h-11 px-4 rounded-full text-sm font-semibold inline-flex items-center hover:bg-white dark:hover:bg-ps-noite2" x-text="$store.ps.usuario ? 'Voltar à Sala PS' : 'Entrar'"></a>
+    <button type="button" @click="$store.ps.alternarTema()" class="h-11 w-11 rounded-full inline-flex items-center justify-center hover:bg-white dark:hover:bg-ps-noite2" :aria-label="$store.ps.escuro ? 'Ativar modo claro' : 'Ativar modo escuro'">
+      <span x-show="$store.ps.escuro" x-cloak x-html="ic('sol')"></span><span x-show="!$store.ps.escuro" x-html="ic('lua')"></span>
+    </button>
+  </div>
+</header>
+
+<main id="conteudo" class="px-4 sm:px-6 py-10">
+  <div class="max-w-3xl mx-auto grid gap-8 lg:max-w-5xl lg:grid-cols-[220px_minmax(0,1fr)]">
+    <nav class="lg:sticky lg:top-24 self-start" aria-label="Nesta página">
+      <p class="text-xs font-bold tracking-wider text-ps-cinza dark:text-slate-400">NESTA PÁGINA</p>
+      <ul class="mt-3 flex flex-wrap lg:flex-col gap-2 text-sm">
+        <li><a href="#dados" class="hover:underline">1. Dados coletados</a></li>
+        <li><a href="#uso" class="hover:underline">2. Como usamos</a></li>
+        <li><a href="#compartilhamento" class="hover:underline">3. Compartilhamento</a></li>
+        <li><a href="#direitos" class="hover:underline">4. Seus direitos</a></li>
+        <li><a href="#termos" class="hover:underline">5. Termos de uso</a></li>
+        <li><a href="#contato" class="hover:underline">6. Contato</a></li>
+      </ul>
+    </nav>
+
+    <article class="min-w-0">
+      <p class="text-xs font-bold tracking-[1.5px] text-ps-texto dark:text-ps-claro">LGPD</p>
+      <h1 class="mt-2 text-3xl sm:text-4xl font-extrabold leading-tight">Privacidade e termos de uso</h1>
+      <p class="mt-2 text-sm text-ps-cinza dark:text-slate-400">Última atualização: [data]</p>
+
+      <div class="mt-6 rounded-2xl bg-amber-50 text-amber-900 dark:bg-amber-400/10 dark:text-amber-200 border border-amber-300/70 dark:border-amber-400/30 p-4 text-sm leading-6">
+        <b>Modelo para revisão.</b> Este texto é uma estrutura de exemplo para a demo. Antes de usar de verdade, a PS precisa revisar o conteúdo e preencher os campos entre colchetes.
+      </div>
+      <div class="mt-4 rounded-2xl bg-ps-suave dark:bg-ps-noite2 border border-ps-linha dark:border-ps-noite3 p-4 text-sm leading-6">
+        <b>Sobre esta demo:</b> nada do que você faz aqui é enviado para um servidor. Entregas, notas, avisos e preferências ficam salvos apenas no navegador deste aparelho, e você pode apagar tudo em Configurações.
+      </div>
+
+      <div class="mt-8 flex flex-col gap-8 text-[15px] leading-8">
+        <section id="dados" class="scroll-mt-24">
+          <h2 class="text-xl font-extrabold">1. Dados coletados</h2>
+          <p class="mt-2">Na versão final, a Sala PS trataria os dados necessários para o funcionamento da plataforma, como nome, e-mail, turmas em que a pessoa está, entregas, notas, comentários e registros de acesso. [Revisar a lista com a PS.]</p>
+        </section>
+        <section id="uso" class="scroll-mt-24">
+          <h2 class="text-xl font-extrabold">2. Como usamos os dados</h2>
+          <p class="mt-2">Para identificar quem acessa, organizar as turmas, permitir entregas e correções, enviar avisos e acompanhar o progresso no trainee. A base legal de cada uso precisa ser definida pela PS. [Base legal]</p>
+        </section>
+        <section id="compartilhamento" class="scroll-mt-24">
+          <h2 class="text-xl font-extrabold">3. Compartilhamento</h2>
+          <p class="mt-2">Os dados ficam visíveis apenas para quem precisa deles: instrutores veem as entregas das suas turmas e a administração gerencia contas e turmas. [Listar fornecedores de hospedagem, se houver.]</p>
+        </section>
+        <section id="direitos" class="scroll-mt-24">
+          <h2 class="text-xl font-extrabold">4. Seus direitos</h2>
+          <p class="mt-2">Pela LGPD, a pessoa pode pedir acesso, correção, portabilidade e exclusão dos seus dados, entre outros direitos. Na demo, "Baixar meus dados" e "Apagar meus dados" ficam em Configurações.</p>
+        </section>
+        <section id="termos" class="scroll-mt-24">
+          <h2 class="text-xl font-extrabold">5. Termos de uso</h2>
+          <p class="mt-2">A plataforma é de uso interno da PS Júnior Consultoria. Cada pessoa é responsável pelo que publica e deve respeitar a Cultura da PS e as Regras Não Negociáveis. Materiais das turmas não devem ser compartilhados fora da PS sem autorização. [Revisar com a PS.]</p>
+        </section>
+        <section id="contato" class="scroll-mt-24">
+          <h2 class="text-xl font-extrabold">6. Contato</h2>
+          <p class="mt-2">Controlador: PS Júnior Consultoria, [CNPJ]. Encarregado de dados (DPO): [nome] · [e-mail do encarregado].</p>
+        </section>
+      </div>
+    </article>
+  </div>
+</main>
+
+<footer class="border-t border-ps-linha dark:border-ps-noite3 text-center py-8 text-xs font-bold tracking-[1.5px] text-ps-cinza dark:text-slate-500">PS JÚNIOR PSEL26/2</footer>
+
+<script src="js/dados.js"></script>
+<script src="js/app.js"></script>
+</body>
+</html>

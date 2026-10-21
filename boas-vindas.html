@@ -1,0 +1,142 @@
+<!doctype html>
+<html lang="pt-BR" data-pagina="boas-vindas">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Boas-vindas | Sala PS</title>
+<link rel="icon" type="image/png" href="img/logo-ps.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<script src="https://cdn.tailwindcss.com"></script>
+<script src="js/tw.js"></script>
+<link rel="stylesheet" href="css/sala.css">
+<script defer src="https://cdn.jsdelivr.net/npm/@alpinejs/collapse@3.14.1/dist/cdn.min.js"></script>
+<script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.14.1/dist/cdn.min.js"></script>
+</head>
+
+<body x-data="tour()" class="font-sans bg-ps-fundo text-ps-escuro dark:bg-ps-noite dark:text-slate-100 min-h-screen flex flex-col">
+
+<header class="h-16 px-4 sm:px-6 flex items-center justify-between">
+  <span class="flex items-center gap-2.5">
+    <img src="img/logo-ps.png" alt="" width="133" height="180" class="h-7 w-auto">
+    <span class="font-extrabold text-lg tracking-tight">Sala <span class="text-ps-texto dark:text-ps-claro">PS</span></span>
+  </span>
+  <button type="button" @click="concluir()" class="h-11 px-4 rounded-full text-sm font-semibold text-ps-cinza dark:text-slate-400 hover:bg-white dark:hover:bg-ps-noite2">Pular tour</button>
+</header>
+
+<main id="conteudo" class="flex-1 px-4 sm:px-6 py-6 flex items-start sm:items-center justify-center">
+  <div class="w-full max-w-2xl">
+    <!-- Progresso -->
+    <div class="flex items-center gap-2" aria-hidden="true">
+      <template x-for="i in total" :key="i"><span class="h-1.5 flex-1 rounded-full transition-colors" :class="i <= passo ? 'bg-ps-azul' : 'bg-ps-linha dark:bg-ps-noite3'"></span></template>
+    </div>
+    <p class="mt-3 text-sm font-semibold text-ps-cinza dark:text-slate-400" aria-live="polite" x-text="'Passo ' + passo + ' de ' + total"></p>
+
+    <section class="mt-4 rounded-3xl bg-white dark:bg-ps-noite2 border border-ps-linha dark:border-ps-noite3 p-6 sm:p-10 min-h-[420px] flex flex-col">
+
+      <!-- 1. Boas-vindas -->
+      <div x-show="passo === 1" class="flex-1">
+        <span class="h-20 w-20 rounded-full bg-ps-azul text-ps-escuro text-3xl font-extrabold inline-flex items-center justify-center" x-text="$store.ps.iniciais()"></span>
+        <h1 class="mt-6 text-3xl sm:text-4xl font-extrabold leading-tight">Boas-vindas, <span x-text="primeiroNome()"></span>!</h1>
+        <p class="mt-3 text-[15px] leading-7 text-ps-cinza dark:text-slate-300">Esta é a Sala PS, o ambiente de aprendizagem do Trainee PSEL26/2. Para começar, conta pra gente: qual área da PS mais te interessa?</p>
+        <fieldset class="mt-6">
+          <legend class="sr-only">Área de interesse</legend>
+          <div class="flex flex-wrap gap-2">
+            <template x-for="a in AREAS_PS" :key="a">
+              <label class="cursor-pointer">
+                <input type="radio" name="area" class="peer sr-only" :value="a" x-model="$store.ps.perfil.area">
+                <span class="inline-flex items-center min-h-[44px] px-4 rounded-full border-[1.5px] text-sm font-semibold transition-colors peer-focus-visible:ring-2 peer-focus-visible:ring-ps-azul"
+                      :class="$store.ps.perfil.area === a ? 'border-ps-azul bg-ps-azul text-ps-escuro' : 'border-ps-linha dark:border-ps-noite3 hover:border-ps-claro'" x-text="a"></span>
+              </label>
+            </template>
+          </div>
+        </fieldset>
+      </div>
+
+      <!-- 2. Como funciona -->
+      <div x-show="passo === 2" x-cloak class="flex-1">
+        <h1 class="text-2xl sm:text-3xl font-extrabold">Como a Sala PS funciona</h1>
+        <div class="mt-6 grid sm:grid-cols-2 gap-3">
+          <template x-for="c in recursos" :key="c.t">
+            <div class="rounded-2xl border border-ps-linha dark:border-ps-noite3 p-5">
+              <span class="h-11 w-11 rounded-xl bg-ps-suave dark:bg-ps-noite3 text-ps-texto dark:text-ps-claro inline-flex items-center justify-center" x-html="ic(c.i)"></span>
+              <p class="mt-3 font-bold" x-text="c.t"></p>
+              <p class="mt-1 text-sm leading-6 text-ps-cinza dark:text-slate-400" x-text="c.d"></p>
+            </div>
+          </template>
+        </div>
+      </div>
+
+      <!-- 3. Preferências -->
+      <div x-show="passo === 3" x-cloak class="flex-1">
+        <h1 class="text-2xl sm:text-3xl font-extrabold">Do seu jeito</h1>
+        <p class="mt-2 text-[15px] text-ps-cinza dark:text-slate-300">Você pode mudar isso depois em Configurações.</p>
+        <fieldset class="mt-6">
+          <legend class="text-sm font-bold">Tema</legend>
+          <div class="mt-3 grid grid-cols-3 gap-3">
+            <template x-for="t in [{v:'claro',n:'Claro',i:'sol'},{v:'escuro',n:'Escuro',i:'lua'},{v:'sistema',n:'Sistema',i:'engrenagem'}]" :key="t.v">
+              <label class="cursor-pointer">
+                <input type="radio" name="tema" class="peer sr-only" :value="t.v" :checked="tema === t.v" @change="tema = t.v; $store.ps.definirTema(t.v)">
+                <span class="flex flex-col items-center gap-2 rounded-2xl border-2 py-4 text-sm font-semibold peer-focus-visible:ring-2 peer-focus-visible:ring-ps-azul"
+                      :class="tema === t.v ? 'border-ps-azul bg-ps-suave dark:bg-ps-noite3' : 'border-ps-linha dark:border-ps-noite3'">
+                  <span x-html="ic(t.i)"></span><span x-text="t.n"></span>
+                </span>
+              </label>
+            </template>
+          </div>
+        </fieldset>
+        <div class="mt-6 flex flex-col gap-3">
+          <label class="flex items-center justify-between gap-4 rounded-xl border border-ps-linha dark:border-ps-noite3 px-4 py-3 cursor-pointer">
+            <span class="text-sm font-semibold">Avisar quando sair uma nota</span>
+            <input type="checkbox" class="h-5 w-5 accent-[#007FA6]" x-model="$store.ps.config.notif.notas">
+          </label>
+          <label class="flex items-center justify-between gap-4 rounded-xl border border-ps-linha dark:border-ps-noite3 px-4 py-3 cursor-pointer">
+            <span class="text-sm font-semibold">Avisar sobre novos avisos das turmas</span>
+            <input type="checkbox" class="h-5 w-5 accent-[#007FA6]" x-model="$store.ps.config.notif.avisos">
+          </label>
+        </div>
+      </div>
+
+      <!-- 4. Pronto -->
+      <div x-show="passo === 4" x-cloak class="flex-1 flex flex-col items-center justify-center text-center">
+        <span class="h-20 w-20 rounded-full bg-emerald-100 text-emerald-700 dark:bg-emerald-400/15 dark:text-emerald-300 inline-flex items-center justify-center" x-html="ic('checkCirculo', '!w-10 !h-10')"></span>
+        <h1 class="mt-6 text-3xl font-extrabold">Tudo pronto!</h1>
+        <p class="mt-3 max-w-md text-[15px] leading-7 text-ps-cinza dark:text-slate-300">Suas turmas já estão no Início. Comece pela turma de Integração para conhecer a cultura da PS.</p>
+      </div>
+
+      <div class="mt-8 flex items-center justify-between gap-3">
+        <button type="button" x-show="passo > 1" @click="passo--" class="h-12 px-5 rounded-full text-sm font-semibold border border-ps-linha dark:border-ps-noite3 inline-flex items-center gap-1 hover:bg-ps-fundo dark:hover:bg-ps-noite3"><span x-html="ic('esquerda', '!w-4 !h-4')"></span>Voltar</button>
+        <span x-show="passo === 1"></span>
+        <button type="button" @click="passo < total ? passo++ : concluir()" class="h-12 px-8 rounded-full text-[15px] font-bold bg-ps-azul text-ps-escuro inline-flex items-center gap-1 hover:brightness-105">
+          <span x-text="passo < total ? 'Continuar' : 'Ir para o início'"></span><span x-html="ic('direita', '!w-4 !h-4')"></span>
+        </button>
+      </div>
+    </section>
+  </div>
+</main>
+
+<script src="js/dados.js"></script>
+<script src="js/app.js"></script>
+<script>
+  function tour() {
+    return {
+      passo: 1, total: 4, tema: 'sistema',
+      recursos: [
+        { i: 'inicio', t: 'Turmas', d: 'Cada turma tem mural de avisos, atividades por tópico e a lista de pessoas.' },
+        { i: 'pendencias', t: 'Pendências', d: 'Tudo o que falta entregar, de todas as turmas, num lugar só.' },
+        { i: 'agenda', t: 'Agenda', d: 'Prazos, encontros e eventos, como a Imersão do trainee.' },
+        { i: 'notas', t: 'Notas e certificados', d: 'Acompanhe notas e feedbacks e baixe o certificado ao concluir uma turma.' }
+      ],
+      init() { this.tema = this.$store.ps.temaEscolhido(); },
+      primeiroNome() { var n = (this.$store.ps.usuario && this.$store.ps.usuario.nome) || ''; return n.split(' ')[0]; },
+      concluir() {
+        this.$store.ps.perfil.onboarding = true;
+        this.$store.ps.salvar();
+        location.href = 'index.html';
+      }
+    };
+  }
+</script>
+</body>
+</html>

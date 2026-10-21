@@ -1,0 +1,265 @@
+<!doctype html>
+<html lang="pt-BR" data-pagina="turma">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Turma | Sala PS</title>
+<link rel="icon" type="image/png" href="img/logo-ps.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<script src="https://cdn.tailwindcss.com"></script>
+<script src="js/tw.js"></script>
+<link rel="stylesheet" href="css/sala.css">
+<script defer src="https://cdn.jsdelivr.net/npm/@alpinejs/collapse@3.14.1/dist/cdn.min.js"></script>
+<script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.14.1/dist/cdn.min.js"></script>
+</head>
+
+<body x-data="pagina()" :class="$store.ps.menu && 'overflow-hidden lg:overflow-auto'" class="font-sans bg-ps-fundo text-ps-escuro dark:bg-ps-noite dark:text-slate-100 min-h-screen">
+
+<main id="conteudo" class="pt-16 lg:pl-72 min-h-screen">
+<template x-if="turma">
+  <div>
+    <!-- Abas -->
+    <div class="sticky top-16 z-20 bg-white dark:bg-ps-noite2 border-b border-ps-linha dark:border-ps-noite3">
+      <div class="flex justify-center gap-1 sm:gap-4 overflow-x-auto" role="tablist" aria-label="Seções da turma">
+        <template x-for="a in [{id:'mural',n:'Mural'},{id:'atividades',n:'Atividades'},{id:'pessoas',n:'Pessoas'}]" :key="a.id">
+          <button type="button" role="tab" @click="irAba(a.id)" :aria-selected="(aba === a.id).toString()"
+             class="h-12 px-4 inline-flex items-center text-sm font-semibold border-b-[3px] whitespace-nowrap focus:outline-none focus-visible:bg-ps-suave dark:focus-visible:bg-ps-noite3"
+             :class="aba === a.id ? 'border-ps-azul text-ps-texto dark:text-ps-claro' : 'border-transparent text-ps-cinza dark:text-slate-400 hover:text-ps-escuro dark:hover:text-white'"
+             x-text="a.n"></button>
+        </template>
+      </div>
+    </div>
+
+    <div class="px-4 sm:px-6 py-6 max-w-5xl mx-auto">
+
+      <!-- ================= MURAL ================= -->
+      <section x-show="aba === 'mural'" aria-label="Mural">
+        <div class="relative overflow-hidden rounded-2xl h-40 sm:h-56 p-5 sm:p-7 flex flex-col justify-end text-white" :style="'background:' + turma.cor">
+          <svg class="banner-deco" viewBox="0 0 800 224" preserveAspectRatio="xMaxYMid slice" aria-hidden="true">
+            <circle cx="700" cy="40" r="140" fill="none" stroke="#53CCF5" stroke-width="3"/>
+            <circle cx="700" cy="40" r="90" fill="none" stroke="#53CCF5" stroke-width="3"/>
+            <path d="M480 224 L600 90 L720 224 Z" fill="#00AFE3"/>
+            <path d="M600 224 L700 120 L800 224 Z" fill="#53CCF5"/>
+          </svg>
+          <a x-show="$store.ps.instrutor()" x-cloak :href="'turma-config.html?t=' + turma.id" class="absolute top-4 right-4 h-11 px-4 rounded-full bg-black/25 hover:bg-black/40 text-sm font-semibold inline-flex items-center gap-2"><span x-html="ic('engrenagem', '!w-4 !h-4')"></span>Configurar turma</a>
+          <h1 class="relative text-2xl sm:text-4xl font-extrabold leading-tight" x-text="turma.nome"></h1>
+          <p class="relative mt-1 text-sm sm:text-lg opacity-90" x-text="turma.secao"></p>
+        </div>
+
+        <div class="mt-6 grid gap-6 md:grid-cols-[200px_minmax(0,1fr)]">
+          <div class="flex flex-col gap-4">
+            <div class="rounded-2xl border border-ps-linha dark:border-ps-noite3 bg-white dark:bg-ps-noite2 p-4">
+              <p class="text-sm font-semibold">Código da turma</p>
+              <p class="mt-2 text-xl font-bold text-ps-texto dark:text-ps-claro" x-text="turma.codigo"></p>
+            </div>
+            <div class="rounded-2xl border border-ps-linha dark:border-ps-noite3 bg-white dark:bg-ps-noite2 p-4">
+              <p class="text-sm font-semibold">Próximas atividades</p>
+              <template x-if="$store.ps.pendentes(turma).length === 0">
+                <p class="mt-2 text-sm text-ps-cinza dark:text-slate-400">Tudo em dia!</p>
+              </template>
+              <template x-for="it in $store.ps.pendentes(turma).slice(0, 3)" :key="it.id">
+                <a :href="$store.ps.urlItem(turma.id, it)" class="mt-2 block text-sm hover:underline" x-text="it.titulo"></a>
+              </template>
+              <button type="button" @click="irAba('atividades')" class="mt-3 text-sm font-semibold text-ps-texto dark:text-ps-claro hover:underline">Ver tudo</button>
+            </div>
+          </div>
+
+          <div class="flex flex-col gap-4 min-w-0">
+            <!-- Novo aviso -->
+            <div class="rounded-2xl border border-ps-linha dark:border-ps-noite3 bg-white dark:bg-ps-noite2">
+              <button type="button" x-show="!avisoAberto" @click="avisoAberto = true; $nextTick(() => $refs.aviso.focus())" class="w-full flex items-center gap-4 p-4 text-left text-sm text-ps-cinza dark:text-slate-400 rounded-2xl hover:bg-ps-fundo/60 dark:hover:bg-ps-noite3/50">
+                <span class="h-10 w-10 rounded-full bg-ps-azul text-ps-escuro font-bold inline-flex items-center justify-center shrink-0" x-text="$store.ps.iniciais()"></span>
+                Escreva um aviso para a turma
+              </button>
+              <div x-show="avisoAberto" x-cloak class="p-4">
+                <label for="aviso" class="sr-only">Texto do aviso</label>
+                <textarea id="aviso" x-ref="aviso" x-model="aviso" rows="4" placeholder="Escreva um aviso para a turma"
+                  class="w-full rounded-xl border border-ps-linha dark:border-ps-noite3 bg-ps-suave dark:bg-ps-noite p-3 text-[15px] focus:outline-none focus:ring-2 focus:ring-ps-azul"></textarea>
+                <div class="mt-3 flex justify-end gap-2">
+                  <button type="button" @click="avisoAberto = false; aviso = ''" class="h-11 px-5 rounded-full text-sm font-semibold hover:bg-ps-fundo dark:hover:bg-ps-noite3">Cancelar</button>
+                  <button type="button" @click="$store.ps.publicar(turma.id, aviso); avisoAberto = false; aviso = ''" :disabled="!aviso.trim()" class="h-11 px-5 rounded-full text-sm font-bold bg-ps-azul text-ps-escuro disabled:opacity-40 disabled:cursor-not-allowed">Publicar</button>
+                </div>
+              </div>
+            </div>
+
+            <!-- Posts -->
+            <template x-for="post in $store.ps.mural(turma)" :key="post.id">
+              <article class="rounded-2xl border border-ps-linha dark:border-ps-noite3 bg-white dark:bg-ps-noite2" x-data="{ verTodos: false, coment: '' }">
+                <div class="p-4 sm:p-5">
+                  <div class="flex items-center gap-3">
+                    <span class="h-10 w-10 rounded-full font-bold inline-flex items-center justify-center shrink-0"
+                          :class="post.meu ? 'bg-ps-azul text-ps-escuro' : 'text-white'" :style="post.meu ? '' : 'background:' + turma.cor"
+                          x-text="$store.ps.iniciais(post.autor)"></span>
+                    <div class="min-w-0">
+                      <p class="text-sm font-semibold truncate" x-text="post.autor"></p>
+                      <p class="text-xs text-ps-cinza dark:text-slate-400" x-text="post.data"></p>
+                    </div>
+                  </div>
+                  <p class="mt-4 text-[15px] leading-7 whitespace-pre-line break-words" x-text="post.texto"></p>
+                </div>
+                <div class="border-t border-ps-linha dark:border-ps-noite3 px-4 sm:px-5 py-3">
+                  <template x-if="($store.ps.comentarios[post.id] || []).length > 1">
+                    <button type="button" @click="verTodos = !verTodos" class="mb-1 inline-flex items-center gap-2 min-h-[44px] text-sm font-semibold text-ps-cinza dark:text-slate-400 hover:text-ps-escuro dark:hover:text-white">
+                      <span x-html="ic('pessoas', '!w-4 !h-4')"></span>
+                      <span x-text="(verTodos ? 'Ocultar' : 'Ver') + ' ' + $store.ps.comentarios[post.id].length + ' comentários'"></span>
+                    </button>
+                  </template>
+                  <template x-for="(c, ci) in ($store.ps.comentarios[post.id] || [])" :key="ci">
+                    <div x-show="verTodos || ci === $store.ps.comentarios[post.id].length - 1" class="flex gap-3 py-2">
+                      <span class="h-8 w-8 rounded-full bg-ps-azul text-ps-escuro text-xs font-bold inline-flex items-center justify-center shrink-0" x-text="$store.ps.iniciais(c.autor)"></span>
+                      <div class="min-w-0">
+                        <p class="text-sm"><span class="font-semibold" x-text="c.autor"></span> <span class="text-xs text-ps-cinza dark:text-slate-400" x-text="c.data"></span></p>
+                        <p class="text-sm break-words" x-text="c.texto"></p>
+                      </div>
+                    </div>
+                  </template>
+                  <form @submit.prevent="$store.ps.comentar(post.id, coment); coment = ''" class="flex items-center gap-2 pt-1">
+                    <span class="h-8 w-8 rounded-full bg-ps-azul text-ps-escuro text-xs font-bold inline-flex items-center justify-center shrink-0" aria-hidden="true" x-text="$store.ps.iniciais()"></span>
+                    <label :for="'c-' + post.id" class="sr-only">Adicionar comentário</label>
+                    <input :id="'c-' + post.id" type="text" x-model="coment" placeholder="Adicionar comentário para a turma"
+                      class="flex-1 min-w-0 h-11 rounded-full border border-ps-linha dark:border-ps-noite3 bg-transparent px-4 text-sm focus:outline-none focus:ring-2 focus:ring-ps-azul">
+                    <button type="submit" :disabled="!coment.trim()" class="h-11 w-11 rounded-full inline-flex items-center justify-center text-ps-texto dark:text-ps-claro hover:bg-ps-fundo dark:hover:bg-ps-noite3 disabled:opacity-30" aria-label="Enviar comentário" x-html="ic('enviar')"></button>
+                  </form>
+                </div>
+              </article>
+            </template>
+          </div>
+        </div>
+      </section>
+
+      <!-- ================= ATIVIDADES ================= -->
+      <section x-show="aba === 'atividades'" x-cloak aria-label="Atividades">
+        <!-- Trainee: progresso -->
+        <div x-show="!$store.ps.instrutor()" class="rounded-2xl border border-ps-linha dark:border-ps-noite3 bg-white dark:bg-ps-noite2 p-5">
+          <div class="flex items-center justify-between gap-4">
+            <p class="font-semibold">Seu progresso</p>
+            <p class="text-sm text-ps-cinza dark:text-slate-400" x-text="concluidas() + ' de ' + $store.ps.itens(turma).length + ' concluídas'"></p>
+          </div>
+          <div class="mt-3 h-2.5 rounded-full bg-ps-fundo dark:bg-ps-noite3 overflow-hidden" role="progressbar" :aria-valuenow="$store.ps.progresso(turma)" aria-valuemin="0" aria-valuemax="100" aria-label="Progresso na turma">
+            <div class="h-full rounded-full bg-ps-azul transition-all" :style="'width:' + $store.ps.progresso(turma) + '%'"></div>
+          </div>
+        </div>
+        <!-- Instrutor: atalho para correção -->
+        <div x-show="$store.ps.instrutor()" x-cloak class="rounded-2xl border border-ps-linha dark:border-ps-noite3 bg-white dark:bg-ps-noite2 p-5 flex flex-wrap items-center gap-4">
+          <p class="flex-1 min-w-[200px] font-semibold" x-text="$store.ps.paraCorrigir(turma) ? $store.ps.paraCorrigir(turma) + ' entregas esperando correção nesta turma' : 'Nenhuma entrega esperando correção'"></p>
+          <div class="flex flex-wrap gap-2">
+            <a :href="'criar-atividade.html?t=' + turma.id" class="h-11 px-5 rounded-full text-sm font-semibold border border-ps-linha dark:border-ps-noite3 inline-flex items-center gap-2 hover:bg-ps-fundo dark:hover:bg-ps-noite3"><span x-html="ic('mais', '!w-4 !h-4')"></span>Criar atividade</a>
+            <a :href="'livro-notas.html?t=' + turma.id" class="h-11 px-5 rounded-full text-sm font-semibold border border-ps-linha dark:border-ps-noite3 inline-flex items-center gap-2 hover:bg-ps-fundo dark:hover:bg-ps-noite3"><span x-html="ic('tabela', '!w-4 !h-4')"></span>Livro de notas</a>
+            <a :href="'corrigir.html?t=' + turma.id" class="h-11 px-6 rounded-full text-sm font-bold bg-ps-azul text-ps-escuro inline-flex items-center gap-2 hover:brightness-105"><span x-html="ic('corrigir', '!w-4 !h-4')"></span>Corrigir entregas</a>
+          </div>
+        </div>
+
+        <div class="mt-6 grid gap-6 md:grid-cols-[200px_minmax(0,1fr)]">
+          <div>
+            <label class="md:hidden flex flex-col gap-1 text-sm">
+              <span class="font-semibold">Tópico</span>
+              <select x-model="filtro" class="h-11 rounded-lg border border-ps-linha dark:border-ps-noite3 bg-white dark:bg-ps-noite2 px-3">
+                <option value="">Todos os tópicos</option>
+                <template x-for="tp in turma.topicos" :key="tp.nome"><option :value="tp.nome" x-text="tp.nome"></option></template>
+              </select>
+            </label>
+            <div class="hidden md:flex flex-col gap-1 sticky top-32">
+              <button type="button" @click="filtro = ''" class="text-left px-4 py-2.5 rounded-full text-sm font-semibold" :class="filtro === '' ? 'bg-ps-suave text-ps-texto dark:bg-ps-noite3 dark:text-ps-claro' : 'hover:bg-white dark:hover:bg-ps-noite2'">Todos os tópicos</button>
+              <template x-for="tp in turma.topicos" :key="tp.nome">
+                <button type="button" @click="filtro = tp.nome" class="text-left px-4 py-2.5 rounded-full text-sm" :class="filtro === tp.nome ? 'bg-ps-suave text-ps-texto font-semibold dark:bg-ps-noite3 dark:text-ps-claro' : 'hover:bg-white dark:hover:bg-ps-noite2'" x-text="tp.nome"></button>
+              </template>
+            </div>
+          </div>
+
+          <div class="flex flex-col gap-8 min-w-0">
+            <template x-if="turma.topicos.length === 0">
+              <div class="text-center py-16 px-6 rounded-2xl border border-dashed border-ps-linha dark:border-ps-noite3">
+                <p class="font-semibold">Ainda não há atividades nesta turma.</p>
+                <p class="mt-1 text-sm text-ps-cinza dark:text-slate-400">[Na versão final, instrutores publicam materiais, tarefas e quizzes aqui.]</p>
+              </div>
+            </template>
+            <template x-for="tp in turma.topicos.filter(x => !filtro || x.nome === filtro)" :key="tp.nome">
+              <div>
+                <h2 class="text-xl sm:text-2xl font-extrabold pb-3 border-b-2" :style="'border-color:' + turma.cor" x-text="tp.nome"></h2>
+                <ul class="mt-2 flex flex-col">
+                  <template x-for="it in tp.itens" :key="it.id">
+                    <li class="border-b border-ps-linha dark:border-ps-noite3 last:border-0">
+                      <a :href="$store.ps.urlItem(turma.id, it)" class="flex items-center gap-4 px-2 sm:px-3 py-3 rounded-xl hover:bg-white dark:hover:bg-ps-noite2 focus:outline-none focus-visible:ring-2 focus-visible:ring-ps-azul">
+                        <span class="h-10 w-10 rounded-full inline-flex items-center justify-center shrink-0" :class="$store.ps.corTipo(it.tipo)" x-html="ic(it.tipo)"></span>
+                        <span class="flex-1 min-w-0">
+                          <span class="block text-[15px] font-semibold truncate" x-text="it.titulo"></span>
+                          <span class="block text-xs text-ps-cinza dark:text-slate-400" x-text="$store.ps.rotulo(it.tipo)"></span>
+                        </span>
+                        <span class="shrink-0 text-xs sm:text-sm inline-flex items-center gap-1"
+                              :class="$store.ps.concluido(it) ? 'font-semibold text-emerald-700 dark:text-emerald-400' : 'text-ps-cinza dark:text-slate-400'">
+                          <span x-show="$store.ps.concluido(it)" x-html="ic('check', '!w-4 !h-4')"></span>
+                          <span x-text="$store.ps.resumo(it)"></span>
+                        </span>
+                      </a>
+                    </li>
+                  </template>
+                </ul>
+              </div>
+            </template>
+          </div>
+        </div>
+      </section>
+
+      <!-- ================= PESSOAS ================= -->
+      <section x-show="aba === 'pessoas'" x-cloak class="max-w-3xl mx-auto" aria-label="Pessoas">
+        <h2 class="text-2xl sm:text-3xl font-extrabold pb-3 border-b-2 text-ps-texto dark:text-ps-claro" :style="'border-color:' + turma.cor">Instrutores</h2>
+        <ul class="mt-2">
+          <li class="flex items-center gap-4 py-3">
+            <span class="h-10 w-10 rounded-full text-white font-bold inline-flex items-center justify-center" :style="'background:' + turma.cor" x-text="$store.ps.iniciais(turma.instrutor)"></span>
+            <span x-text="turma.instrutor"></span>
+          </li>
+        </ul>
+        <div class="mt-10 flex items-end justify-between pb-3 border-b-2" :style="'border-color:' + turma.cor">
+          <h2 class="text-2xl sm:text-3xl font-extrabold text-ps-texto dark:text-ps-claro">Trainees</h2>
+          <span class="text-sm text-ps-cinza dark:text-slate-400">[nº de trainees]</span>
+        </div>
+        <ul class="mt-2 divide-y divide-ps-linha dark:divide-ps-noite3">
+          <li class="flex items-center gap-4 py-3">
+            <span class="h-10 w-10 rounded-full bg-ps-azul text-ps-escuro font-bold inline-flex items-center justify-center" x-text="$store.ps.iniciais()"></span>
+            <span><span x-text="$store.ps.usuario && $store.ps.usuario.nome"></span> <span class="text-sm text-ps-cinza dark:text-slate-400">(você)</span></span>
+          </li>
+          <template x-for="a in ALUNOS_EXEMPLO" :key="a.id">
+            <li class="flex items-center gap-4 py-3 text-ps-cinza dark:text-slate-400">
+              <span class="h-10 w-10 rounded-full border-2 border-dashed border-ps-linha dark:border-ps-noite3 inline-flex items-center justify-center text-xs font-bold" x-text="$store.ps.iniciais(a.nome)"></span>
+              <span x-text="a.nome"></span>
+            </li>
+          </template>
+        </ul>
+      </section>
+    </div>
+  </div>
+</template>
+</main>
+
+<script src="js/dados.js"></script>
+<script src="js/app.js"></script>
+<script src="js/layout.js"></script>
+<script>
+  function pagina() {
+    var abaInicial = param('aba');
+    return {
+      tid: param('t'),
+      aba: ['mural', 'atividades', 'pessoas'].indexOf(abaInicial) >= 0 ? abaInicial : 'mural',
+      filtro: '', aviso: '', avisoAberto: false,
+      get turma() { return this.$store.ps.turma(this.tid); },
+      init() {
+        if (!this.turma) { location.replace('404.html'); return; }
+        this.$store.ps.titulo = this.turma.nome;
+        document.title = this.turma.nome + ' | Sala PS';
+      },
+      irAba(a) {
+        this.aba = a;
+        history.replaceState(null, '', 'turma.html?t=' + encodeURIComponent(this.tid) + '&aba=' + a);
+        window.scrollTo(0, 0);
+      },
+      concluidas() {
+        var s = this.$store.ps;
+        return s.itens(this.turma).filter(function (i) { return s.concluido(i); }).length;
+      }
+    };
+  }
+</script>
+</body>
+</html>
